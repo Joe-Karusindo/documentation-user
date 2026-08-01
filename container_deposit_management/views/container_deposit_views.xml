@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_import_container_deposit" model="ir.sequence">
+            <field name="name">Import Container Deposit</field>
+            <field name="code">import.container.deposit</field>
+            <field name="prefix">CD/%(year)s/%(Rmonth)s/</field>
+            <field name="padding">5</field>
+            <field name="use_date_range" eval="True"/>
+            <field name="range_reset">monthly</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+
+    <record id="view_import_container_deposit_form" model="ir.ui.view">
+        <field name="name">import.container.deposit.form</field>
+        <field name="model">import.container.deposit</field>
+        <field name="arch" type="xml">
+            <form string="Container Deposit Management">
+                <header>
+                    <button name="action_submit" string="Submit" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_user,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button name="action_confirm" string="Confirm" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_management,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'waiting_confirm')]}"/>
+                    <button name="action_print_container_deposit" string="Print Container Deposit" type="object"
+                            groups="container_deposit_management.group_container_deposit_user,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', 'not in', ['draft','waiting_confirm','confirmed'])]}"/>
+                    <button name="action_set_to_draft" string="Set to Draft" type="object"
+                            attrs="{'invisible': [('state', 'in', ['draft','cancel'])]}"/>
+                    <field name="all_lines_billed" invisible="1"/>
+                    <field name="deposit_bills_paid" invisible="1"/>
+                    <button name="action_create_deposit_bill" string="Create Deposit Bill" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': ['|', ('state', 'not in', ['confirmed','deposit_paid']), ('all_lines_billed', '=', True)]}"/>
+                    <!-- Mark Deposit Paid: plain before bills exist, highlighted once all lines billed. -->
+                    <button name="action_mark_deposit_paid" string="Mark Deposit Paid" type="object"
+                            groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('all_lines_billed', '=', True)]}"/>
+                    <button name="action_mark_deposit_paid" string="Mark Deposit Paid" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('all_lines_billed', '=', False)]}"/>
+                    <button name="action_start_settlement" string="Settlement" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', 'not in', ['deposit_paid','waiting_settlement'])]}"/>
+                    <button name="action_settlement_received" string="Settlement Received" type="object"
+                            groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'waiting_settlement')]}"/>
+                    <button name="action_request_approval" string="Request Approval" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'settlement_received')]}"/>
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_management,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'waiting_approval')]}"/>
+                    <button name="action_create_refund_credit_note" string="Create Refund Credit Note" type="object"
+                            groups="container_deposit_management.group_container_deposit_accounting,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'approved')]}"/>
+                    <button name="action_create_ftm_landed_cost" string="Create FTM Landed Cost" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_accounting,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'approved')]}"/>
+                    <button name="action_posted" string="Mark Posted" type="object" class="oe_highlight"
+                            groups="container_deposit_management.group_container_deposit_accounting,container_deposit_management.group_container_deposit_administrator"
+                            attrs="{'invisible': [('state', '!=', 'approved')]}"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            confirm="Return this document to Draft so it can be edited again?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,waiting_confirm,confirmed,deposit_paid,waiting_settlement,settlement_received,waiting_approval,approved,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_vendor_bills" type="object" class="oe_stat_button" icon="fa-file-text-o" attrs="{'invisible': [('vendor_bill_count', '=', 0)]}">
+                            <field name="vendor_bill_count" widget="statinfo" string="Vendor Bills"/>
+                        </button>
+                        <button name="action_view_refund_bills" type="object" class="oe_stat_button" icon="fa-undo" attrs="{'invisible': [('refund_bill_count', '=', 0)]}">
+                            <field name="refund_bill_count" widget="statinfo" string="Refunds"/>
+                        </button>
+                        <button name="action_view_landed_costs" type="object" class="oe_stat_button" icon="fa-cubes" attrs="{'invisible': [('landed_cost_count', '=', 0)]}">
+                            <field name="landed_cost_count" widget="statinfo" string="Landed Costs"/>
+                        </button>
+                        <button name="action_view_journal_entries" type="object" class="oe_stat_button" icon="fa-book" attrs="{'invisible': [('journal_entry_count', '=', 0)]}">
+                            <field name="journal_entry_count" widget="statinfo" string="Journal Entries"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="FTM &amp; Vendor">
+                            <field name="company_id" invisible="1"/>
+                            <field name="ftm_id" attrs="{'readonly': [('state', '!=', 'draft')]}" options="{'no_create': True}"/>
+                            <field name="container_vendor_id" domain="[('is_vendor', '=', True), ('active', '=', True)]" options="{'no_create': True, 'no_create_edit': True}" attrs="{'readonly': [('state', 'not in', ['draft','waiting_confirm'])]}"/>
+                            <field name="landed_cost_journal_id" attrs="{'readonly': [('state', 'not in', ['draft','waiting_confirm','confirmed','approved'])]}"/>
+                        </group>
+                        <group string="FTM Information">
+                            <field name="purchase_order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+                            <field name="picking_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+                            <field name="form_no" readonly="1" force_save="1"/>
+                            <field name="custom_doc_number" readonly="1" force_save="1"/>
+                            <field name="no_awb" readonly="1" force_save="1"/>
+                            <field name="clearance_date" readonly="1" force_save="1"/>
+                            <field name="currency_id" invisible="1" readonly="1" force_save="1"/>
+                            <field name="currency_rate" invisible="1" readonly="1" force_save="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Deposit / Initial Charges" name="deposit_lines">
+                            <!-- Editable columns: Product / Charge, Amount, Taxes. Others readonly. -->
+                            <field name="deposit_line_ids" attrs="{'readonly': [('state', 'not in', ['draft','waiting_confirm'])]}">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="line_type" invisible="1"/>
+                                    <field name="company_id" invisible="1"/>
+                                    <field name="product_id" options="{'no_create': True, 'no_create_edit': True}"/>
+                                    <field name="name" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="vendor_id" domain="[('is_vendor', '=', True), ('active', '=', True)]" options="{'no_create': True, 'no_create_edit': True}" optional="show"/>
+                                    <field name="amount" widget="float"/>
+                                    <field name="tax_ids" widget="many2many_tags" optional="show"/>
+                                    <field name="account_id" readonly="1" force_save="1" options="{'no_create': True, 'no_create_edit': True}" optional="hide"/>
+                                    <field name="vendor_bill_id" readonly="1" options="{'no_create': True}" optional="hide"/>
+                                    <field name="note" readonly="1" optional="hide"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Settlement: Refund / Deduction / Charges" name="settlement_lines">
+                            <!-- Editable: Refund Amount, Taxes, Charge Type. Remaining columns readonly after Settlement. -->
+                            <field name="settlement_line_ids" attrs="{'readonly': [('state', 'not in', ['waiting_settlement','settlement_received','waiting_approval','approved'])]}">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="source_deposit_line_id" readonly="1" optional="hide"/>
+                                    <field name="company_id" invisible="1"/>
+                                    <field name="product_id" domain="[('landed_cost_ok', '=', True)]" options="{'no_create': True}" readonly="1" force_save="1"/>
+                                    <field name="name" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="container_vendor_id" readonly="1" force_save="1" optional="show"/>
+                                    <field name="original_deposit_amount" readonly="1" widget="float" optional="show"/>
+                                    <field name="refund_amount" widget="float"/>
+                                    <field name="tax_ids" widget="many2many_tags" optional="show"/>
+                                    <field name="charge_amount" widget="float" readonly="1" force_save="1" optional="show"/>
+                                    <field name="charge_type"/>
+                                    <field name="split_method" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="charge_account_id" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="refund_bill_id" readonly="1" optional="hide"/>
+                                    <field name="landed_cost_id" readonly="1" optional="hide"/>
+                                    <field name="note" readonly="1" optional="hide"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="FTM Operations" name="operations">
+                            <field name="operation_line_ids" readonly="1" force_save="1">
+                                <tree>
+                                    <field name="product_id"/>
+                                    <field name="purchase_order_id" optional="show"/>
+                                    <field name="qty" optional="show"/>
+                                    <field name="product_uom_id" optional="hide"/>
+                                    <field name="currency_id" optional="hide"/>
+                                    <field name="total_cost_currency" optional="hide"/>
+                                    <field name="extra_expense_currency" optional="hide"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note" placeholder="Internal notes / settlement explanation..."/>
+                        </page>
+                    </notebook>
+                    <group class="oe_subtotal_footer oe_right" colspan="2">
+                        <field name="deposit_amount" readonly="1" widget="float"/>
+                        <field name="initial_charge_amount" readonly="1" widget="float"/>
+                        <field name="refund_amount" readonly="1" widget="float"/>
+                        <field name="deducted_charge_amount" readonly="1" widget="float"/>
+                        <field name="settlement_balance" readonly="1" widget="float"/>
+                    </group>
+                    <div class="oe_clear"/>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_import_container_deposit_tree" model="ir.ui.view">
+        <field name="name">import.container.deposit.tree</field>
+        <field name="model">import.container.deposit</field>
+        <field name="arch" type="xml">
+            <tree string="Container Deposit Management" multi_edit="1">
+                <field name="name"/>
+                <field name="ftm_id" optional="show"/>
+                <field name="container_vendor_id" optional="show"/>
+                <field name="form_no" optional="hide"/>
+                <field name="custom_doc_number" optional="hide"/>
+                <field name="no_awb" optional="hide"/>
+                <field name="clearance_date" optional="hide"/>
+                <field name="deposit_amount" sum="Deposit" widget="float" optional="show"/>
+                <field name="initial_charge_amount" sum="Initial Charge" widget="float" optional="hide"/>
+                <field name="refund_amount" sum="Refund" widget="float" optional="hide"/>
+                <field name="deducted_charge_amount" sum="Charge" widget="float" optional="hide"/>
+                <field name="settlement_balance" sum="Balance" widget="float" optional="show"/>
+                <field name="vendor_bill_count" optional="hide"/>
+                <field name="refund_bill_count" optional="hide"/>
+                <field name="landed_cost_count" optional="hide"/>
+                <field name="state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_import_container_deposit_search" model="ir.ui.view">
+        <field name="name">import.container.deposit.search</field>
+        <field name="model">import.container.deposit</field>
+        <field name="arch" type="xml">
+            <search string="Search Container Deposits">
+                <field name="name"/>
+                <field name="ftm_id"/>
+                <field name="container_vendor_id"/>
+                <field name="custom_doc_number"/>
+                <field name="no_awb"/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="Waiting Settlement" name="waiting_settlement" domain="[('state','=','waiting_settlement')]"/>
+                <filter string="Waiting Approval" name="waiting_approval" domain="[('state','=','waiting_approval')]"/>
+                <filter string="Done" name="done" domain="[('state','=','done')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                    <filter string="Vendor" name="group_vendor" context="{'group_by':'container_vendor_id'}"/>
+                    <filter string="FTM" name="group_ftm" context="{'group_by':'ftm_id'}"/>
+                    <filter string="Clearance Month" name="group_clearance" context="{'group_by':'clearance_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_stock_landed_cost_form_hide_invoice_prepare" model="ir.ui.view">
+        <field name="name">stock.landed.cost.form.hide.invoice.prepare.container.deposit</field>
+        <field name="model">stock.landed.cost</field>
+        <field name="inherit_id" ref="ab_foreign_trade.view_stock_landed_cost_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <field name="container_deposit_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//page[field[@name='invoice_to_check']]" position="attributes">
+                <attribute name="attrs">{'invisible': [('container_deposit_id', '!=', False)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_stock_landed_cost_form_vendor_label" model="ir.ui.view">
+        <field name="name">stock.landed.cost.form.vendor.label.container.deposit</field>
+        <field name="model">stock.landed.cost</field>
+        <field name="inherit_id" ref="custom_reports.view_stock_landed_cost_form_inherit_custom_reports"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="replace">
+                <field name="vendor_id" string="Vendor" readonly="1"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="action_import_container_deposit" model="ir.actions.act_window">
+        <field name="name">Container Deposit Management</field>
+        <field name="res_model">import.container.deposit</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_import_container_deposit_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Container Deposit Management document</p>
+            <p>Track container deposit as temporary asset and post only final deducted container charges to FTM landed cost.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_import_container_deposit" name="Container Deposit Management" parent="custom_import.menu_import_main" action="action_import_container_deposit" sequence="20"
+              groups="container_deposit_management.group_container_deposit_user,container_deposit_management.group_container_deposit_management,container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_accounting,container_deposit_management.group_container_deposit_administrator"/>
+</odoo>
