@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Generate Panduan Penggunaan Container Deposit Management v16.0.1.0.26 (.docx)."""
+"""Generate Panduan Penggunaan Container Deposit Management v16.0.1.0.49 (.docx)."""
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
-DOC_PATH = '/Users/joe/odoo16/odoo/JASINDO/container_deposit_management/doc/Panduan_Penggunaan_Container_Deposit_Management_v16_1_0_26.docx'
+DOC_PATH = '/Users/joe/odoo16/odoo/JASINDO/container_deposit_management/doc/Panduan_Penggunaan_Container_Deposit_Management_v16_1_0_49.docx'
 
 doc = Document()
 
@@ -66,13 +66,13 @@ def table(headers, rows, widths=None):
 title('PANDUAN PENGGUNAAN', 20)
 title('CUSTOM MODULE ODOO 16', 16)
 title('Import Container Deposit Management', 24)
-title('Versi Modul: 16.0.1.0.26', 13, bold=False)
+title('Versi Modul: 16.0.1.0.50 (panduan file v16_1_0_49)', 13, bold=False)
 doc.add_paragraph()
 title('Technical Name: container_deposit_management', 12, bold=False)
 title('Kategori: Inventory / Inventory', 12, bold=False)
 doc.add_paragraph()
 title('Dokumen Functional Guide — Step-by-Step per Stage', 12, bold=False)
-title('Tanggal: 31 July 2026', 12, bold=False)
+title('Tanggal: 5 August 2026', 12, bold=False)
 p = title('Audience: User Operasional Import, Management, Finance, Accounting, Administrator', 11, bold=False)
 p.runs[0].italic = True
 doc.add_page_break()
@@ -81,7 +81,7 @@ doc.add_page_break()
 h1('Daftar Isi')
 for item in [
     '1. Ringkasan Modul & Konsep Bisnis',
-    '2. Perubahan Penting Versi 16.0.1.0.26',
+    '2. Perubahan Penting Hingga Versi 16.0.1.0.50',
     '3. Prasyarat Instalasi & Master Data',
     '4. Hak Akses (User Permission)',
     '5. Akses Menu & Penomoran Dokumen',
@@ -90,12 +90,13 @@ for item in [
     '8. Panduan Step-by-Step per Stage',
     '9. Fungsi Setiap Tombol (Header & Smart Buttons)',
     '10. Cancel & Set to Draft',
-    '11. Jurnal Accounting per Langkah',
-    '12. Aturan Settlement Balance & Validasi',
-    '13. Contoh Kasus End-to-End',
-    '14. Opsi Show/Hide Kolom (Tree View)',
-    '15. Troubleshooting Umum',
-    '16. Checklist UAT',
+    '11. SOP Cancel pada Stage 4a, 9a, dan 9b (Journal & Audit)',
+    '12. Ringkasan Jurnal Accounting per Langkah',
+    '13. Aturan Settlement Balance & Validasi',
+    '14. Contoh Kasus End-to-End',
+    '15. Opsi Show/Hide Kolom (Tree View)',
+    '16. Troubleshooting Umum',
+    '17. Checklist UAT',
     'Lampiran A — Matriks Hak Akses Model',
     'Lampiran B — Versi Dokumen',
 ]:
@@ -128,12 +129,12 @@ bullet('custom_import (stack FTM / custom.declaration.import), ab_foreign_trade,
 bullet('sequence_reset_period, od_journal_sequence (penomoran journal & bulan Romawi)')
 
 # ============ 2 ============
-h1('2. Perubahan Penting Versi 16.0.1.0.26')
+h1('2. Perubahan Penting Hingga Versi 16.0.1.0.50')
 table(['No', 'Perubahan', 'Keterangan'], [
     ['1', 'Sequence dokumen bulan Romawi',
      'Nomor dokumen: CD/YYYY/RomawiBulan/##### (contoh CD/2026/VII/00001), reset bulanan.'],
     ['2', 'Hak akses berjenjang',
-     'Lima group baru: User, Management, Finance, Accounting, Administrator. '
+     'Lima group: User, Management, Finance, Accounting, Administrator. '
      'Tombol workflow tampil & dicek per group.'],
     ['3', 'Status Posted & Done digabung',
      'Tombol Mark Posted langsung menyelesaikan dokumen ke status Done. '
@@ -148,10 +149,59 @@ table(['No', 'Perubahan', 'Keterangan'], [
      'Report PDF untuk pengajuan dari Impor ke Management (status Draft s.d. Confirmed).'],
     ['7', 'Kolom editable dibatasi',
      'Tab Deposit: hanya Product, Vendor, Amount, Taxes yang dapat diedit. '
-     'Tab Settlement: hanya Landed Cost Product, Refund Amount, Taxes, Charge Type.'],
+     'Tab Settlement: hanya Refund Amount, Taxes, Charge Type.'],
     ['8', 'Opsi show/hide kolom',
      'Semua tree view (list utama, Deposit, Settlement, FTM Operations) mendukung '
      'show/hide kolom melalui ikon pengaturan kolom.'],
+    ['9', 'Tombol Create Deposit Bill / Mark Deposit Paid pintar',
+     'Create Deposit Bill otomatis tersembunyi setelah semua baris deposit ter-bill. '
+     'Mark Deposit Paid di-highlight setelah bill dibuat, dan divalidasi: semua bill harus '
+     'sudah Posted dan Paid/In Payment sebelum status berubah ke Deposit Paid.'],
+    ['10', 'Settlement auto-fill',
+     'Saat tombol Settlement diklik, Landed Cost Product / Charge dan Charge Account '
+     'otomatis terisi sesuai tabel mapping produk deposit (lihat bab 3.3). '
+     'Kolom Landed Cost Product / Charge menjadi read-only.'],
+    ['11', 'Akun deposit 1720002 / 1720003',
+     'Deposit Account memakai akun 1720002 Uang Muka Jaminan Container dan '
+     '1720003 Uang Muka Jaminan Sewa Container (di bawah 1720 Uang Muka Pembelian). '
+     'Akun lama 1700002/1700003 tidak digunakan lagi.'],
+    ['12', 'Dokumen Cancelled dapat dibuka kembali',
+     'Tombol Set to Draft tersedia pada status Cancelled sehingga dokumen yang '
+     'terlanjur dibatalkan dapat dikembalikan ke Draft dan diedit ulang.'],
+    ['13', 'Daftar Bills dari CDM dibatasi',
+     'List Vendor Bills / Refunds yang dibuka dari dokumen CDM tidak lagi menampilkan '
+     'tombol New, Upload, dan Create Landed Costs. Register Payment di-highlight '
+     'sebagai aksi utama.'],
+    ['14', 'Tombol Cancel pada daftar Bills CDM',
+     'Membatalkan bill terpilih (ditolak jika sudah ada pembayaran) dan melepas '
+     'tautannya dari baris deposit, sehingga dokumen kembali seperti sebelum '
+     'Create Deposit Bill diklik dan tombol tersebut tersedia lagi.'],
+    ['15', 'Register Payment CDM pintar',
+     'Draft bill otomatis di-Post sebelum wizard payment; bill multi-vendor diblokir; '
+     'journal entry payment memakai sequence journal Bank/Kas (BB/…, KB/…) yang sudah '
+     'dikonfigurasi, menyambung nomor terakhir.'],
+    ['16', 'Settlement lock (klik Settlement ke-2)',
+     'Klik Settlement pertama membuka input Refund Amount. Klik Settlement lagi '
+     'mengunci baris (settlement_locked). Hanya Set to Draft yang membuka kunci.'],
+    ['17', 'Set to Draft dari tahap settlement',
+     'Jika deposit bill sudah dibayar, Set to Draft dari Waiting Settlement s.d. Done/Cancelled '
+     'mengembalikan ke Waiting Settlement (bukan Draft) agar Refund Amount bisa dikoreksi. '
+     'Tab Deposit tetap terkunci karena bill sudah dibayar.'],
+    ['18', 'Cancel disembunyikan di tahap settlement',
+     'Tombol Cancel tidak tampil pada Waiting Settlement s.d. Approved; cukup pakai Set to Draft.'],
+    ['19', 'Highlight tombol dinamis',
+     'Waiting Settlement terkunci: Set to Draft + Settlement Received hijau. '
+     'Setelah Set to Draft: Settlement hijau. Approved: Create Refund CN + Set to Draft hijau. '
+     'Setelah refund paid: Create Refund CN & Set to Draft hilang; Create FTM Landed Cost hijau.'],
+    ['20', 'Form Bill/CN dari CDM dirapikan',
+     'Form yang dibuka dari CDM tanpa tombol CREATE STTF / VIEW STTF; Reset to Draft hanya satu tombol.'],
+    ['21', 'COMPUTE pada FTM Landed Cost CDM',
+     'Landed Cost yang dibuat dari CDM dapat di-Compute meski tertaut FTM '
+     '(melewati blokir viin_foreign_trade "cannot recompute").'],
+    ['22', 'Tab Journal Items pada Landed Cost',
+     'Setelah LC di-Validate (ada Journal Entry, mis. JLC/…), form Landed Cost menampilkan '
+     'tab Journal Items berisi baris Debit–Credit dari journal accounting tersebut '
+     '(Account, Label, Debit, Credit). Tab tersembunyi selama LC masih Draft.'],
 ])
 
 # ============ 3 ============
@@ -161,28 +211,39 @@ number('Pastikan modul custom_import, stock_landed_costs, sequence_reset_period,
 number('Install/upgrade terlebih dahulu di database testing/UAT — jangan langsung production.')
 number('Pastikan Chart of Accounts memiliki akun aktif berikut:')
 table(['Kode Akun', 'Nama / Fungsi', 'Pemakaian'], [
-    ['1700002', 'Uang Muka Jaminan Container', 'Deposit Account untuk produk jaminan container'],
-    ['1700003', 'Uang Muka Jaminan Sewa Container', 'Deposit Account untuk produk jaminan sewa'],
+    ['1720002', 'Uang Muka Jaminan Container', 'Deposit Account untuk produk jaminan container'],
+    ['1720003', 'Uang Muka Jaminan Sewa Container', 'Deposit Account untuk produk jaminan sewa'],
+    ['6130006', 'Biaya Sewa Container', 'Charge Account settlement untuk deposit sewa container'],
+    ['6130016', 'Biaya Perbaikan dan Kebersihan Container', 'Charge Account settlement untuk deposit jaminan container'],
 ])
-para('Catatan: Saat install/upgrade, modul akan mereaktivasi akun 1700002 dan 1700003 jika sempat '
+para('Catatan: Saat install/upgrade, modul akan mereaktivasi akun 1720002 dan 1720003 jika sempat '
      'di-deprecate, serta menyesuaikan prefix sequence dokumen secara otomatis.', italic=True)
 
 h2('3.2 Product Master yang Diizinkan (Deposit Lines)')
 para('Pada tab Deposit / Initial Charges, Product / Charge hanya boleh:')
 table(['Product', 'Deposit Account Auto'], [
-    ['Uang Muka Jaminan Container', '1700002'],
-    ['Uang Muka Jaminan Sewa Container', '1700003'],
+    ['Uang Muka Jaminan Container', '1720002'],
+    ['Uang Muka Jaminan Sewa Container', '1720003'],
 ])
+para('Deposit Account terisi otomatis: sistem memakai Expense Account yang dikonfigurasi pada product '
+     'bila kodenya sesuai (1720002/1720003), atau mencari akun tersebut langsung di Chart of Accounts.', italic=True)
 
-h2('3.3 Product untuk Settlement (Landed Cost)')
-para('Pada tab Settlement, field Landed Cost Product / Charge HARUS produk dengan Is a Landed Cost = True '
-     '(contoh: Biaya Sewa Container / Detention / Demurrage / THC). JANGAN gunakan produk Uang Muka Jaminan.')
+h2('3.3 Product untuk Settlement (Landed Cost) — Auto-fill Mapping')
+para('Saat tombol Settlement diklik, kolom Landed Cost Product / Charge dan Charge Account pada tab '
+     'Settlement terisi otomatis (read-only) berdasarkan tabel mapping berikut:')
+table(['Deposit / Initial Charges (Product)', 'Landed Cost Product / Charge (Auto)', 'Charge Account (Auto)'], [
+    ['Uang Muka Jaminan Sewa Container', 'Biaya Sewa Container (Demurrage)', '6130006 Biaya Sewa Container'],
+    ['Uang Muka Jaminan Container', 'Biaya Perbaikan dan Kebersihan Container', '6130016 Biaya Perbaikan dan Kebersihan Container'],
+])
+para('Product landed cost hasil mapping harus ber-flag Is a Landed Cost = True. Pastikan kedua product '
+     'tersebut ada di master data. JANGAN mengaktifkan produk Uang Muka Jaminan sebagai landed cost.', italic=True)
 
 h2('3.4 Journal')
 bullet('Landed Cost Journal (type: General) — otomatis terisi saat FTM Reference dipilih.')
 bullet('Purchase Journal — untuk Vendor Bill deposit & Vendor Credit Note refund. '
        'Pastikan sequence journal: BILL/%(range_year)s/%(rom_month)s/ dan refund RBILL/%(range_year)s/%(rom_month)s/.')
-bullet('Bank/Cash Journal — untuk Register Payment.')
+bullet('Bank/Cash Journal — untuk Register Payment. Penomoran entry payment mengikuti Entry Sequence '
+       'journal tersebut (contoh BB/%(range_year)s/%(range_rom_month)s/ atau KB/…), reset bulanan.')
 
 h2('3.5 Vendor')
 para('Partner yang dipilih harus berstatus Vendor (Is Vendor = True).')
@@ -209,13 +270,16 @@ table(['No', 'Status', 'Kode Teknis', 'Arti Bisnis', 'User Permission'], [
     ['2', 'Waiting Confirmation', 'waiting_confirm', 'Menunggu konfirmasi atasan/checker', 'User (can Cancel)'],
     ['3', 'Confirmed', 'confirmed', 'Sudah dikonfirmasi; siap buat Vendor Bill', 'Management (can Cancel)'],
     ['4', 'Deposit Paid', 'deposit_paid', 'Deposit sudah dibayar ke vendor', 'Finance (can Cancel)'],
-    ['5', 'Waiting Settlement', 'waiting_settlement', 'Menunggu input refund & potongan', 'Finance (can Cancel)'],
-    ['6', 'Settlement Received', 'settlement_received', 'Nilai settlement sudah diisi', 'Finance (can Cancel)'],
-    ['7', 'Waiting Approval', 'waiting_approval', 'Menunggu approval (balance harus 0)', 'Finance (can Cancel)'],
-    ['8', 'Approved', 'approved', 'Disetujui; buat Refund CN & FTM Landed Cost', 'Management (can Cancel)'],
-    ['9', 'Done', 'done', 'Mark Posted diklik; dokumen accounting terposting; proses selesai', 'Accounting (can Cancel)'],
+    ['5', 'Waiting Settlement', 'waiting_settlement', 'Input/kunci refund & potongan; Cancel disembunyikan', 'Finance (Set to Draft → Waiting Settlement)'],
+    ['6', 'Settlement Received', 'settlement_received', 'Nilai settlement sudah dikunci/diterima', 'Finance (Set to Draft → Waiting Settlement)'],
+    ['7', 'Waiting Approval', 'waiting_approval', 'Menunggu approval (balance harus 0)', 'Finance (Set to Draft → Waiting Settlement)'],
+    ['8', 'Approved', 'approved', 'Disetujui; buat Refund CN & FTM Landed Cost', 'Management (Set to Draft → Waiting Settlement; Cancel disembunyikan)'],
+    ['9', 'Done', 'done', 'Mark Posted diklik; dokumen accounting terposting; proses selesai', 'Accounting (Set to Draft → Waiting Settlement bila deposit sudah dibayar)'],
+    ['10', 'Cancelled', 'cancel', 'Dibatalkan; bila deposit sudah dibayar → Set to Draft ke Waiting Settlement', 'User / Finance sesuai konteks'],
 ])
 para('Administrator memiliki full permission pada seluruh status di atas.', italic=True)
+para('Catatan: Tombol Cancel disembunyikan pada Waiting Settlement, Settlement Received, Waiting Approval, '
+     'dan Approved. Koreksi settlement memakai Set to Draft.', italic=True)
 
 # ============ 5 ============
 h1('5. Akses Menu & Penomoran Dokumen')
@@ -266,16 +330,17 @@ table(['Kolom', 'Fungsi', 'Editable', 'Show/Hide'], [
     ['Vendor', 'Vendor per baris; wajib Is Vendor', 'Ya', 'Show (default)'],
     ['Amount', 'Nilai deposit', 'Ya', 'Selalu tampil'],
     ['Taxes', 'Pajak purchase (opsional)', 'Ya', 'Show (default)'],
-    ['Deposit Account', '1700002/1700003 auto dari product', 'Tidak (read-only)', 'Hide (default)'],
+    ['Deposit Account', '1720002/1720003 auto dari product', 'Tidak (read-only)', 'Hide (default)'],
     ['Vendor Bill', 'Link bill yang dibuat', 'Tidak (read-only)', 'Hide (default)'],
     ['Note', 'Catatan baris', 'Tidak (read-only)', 'Hide (default)'],
 ])
-para('Baris dapat diedit saat state: Draft, Waiting Confirmation.', italic=True)
+para('Baris dapat diedit saat state: Draft, Waiting Confirmation — kecuali deposit bill sudah dibayar '
+     '(deposit_bills_paid): tab Deposit tetap read-only meskipun dokumen dikembalikan ke Draft / Waiting Settlement.', italic=True)
 
 h2('7.4 Tab Settlement: Refund / Deduction / Charges')
 table(['Kolom', 'Fungsi', 'Editable', 'Show/Hide'], [
     ['Source Deposit Line', 'Baris deposit asal (auto saat Settlement)', 'Tidak', 'Hide (default)'],
-    ['Landed Cost Product / Charge', 'Produk landed cost (wajib)', 'Ya', 'Selalu tampil'],
+    ['Landed Cost Product / Charge', 'Auto dari mapping produk deposit (bab 3.3)', 'Tidak (read-only)', 'Selalu tampil'],
     ['Description', 'Deskripsi charge', 'Tidak', 'Hide (default)'],
     ['Container Vendor', 'Vendor settlement', 'Tidak', 'Show (default)'],
     ['Original Deposit Amount', 'Nilai deposit asal', 'Tidak', 'Show (default)'],
@@ -284,13 +349,15 @@ table(['Kolom', 'Fungsi', 'Editable', 'Show/Hide'], [
     ['Final Deducted Charge', 'Auto = Original − Refund', 'Tidak (auto)', 'Show (default)'],
     ['Charge Type', 'detention/demurrage/rental/cleaning/repair/admin/other', 'Ya', 'Selalu tampil'],
     ['Landed Cost Split Method', 'Metode split landed cost', 'Tidak', 'Hide (default)'],
-    ['Charge Account', 'Akun biaya charge', 'Tidak', 'Hide (default)'],
+    ['Charge Account', 'Auto dari mapping (6130006 / 6130016)', 'Tidak', 'Hide (default)'],
     ['Refund Credit Note', 'Link CN refund', 'Tidak', 'Hide (default)'],
     ['FTM Landed Cost', 'Link stock.landed.cost', 'Tidak', 'Hide (default)'],
     ['Note', 'Catatan', 'Tidak', 'Hide (default)'],
 ])
-para('Baris dapat diedit saat state: Waiting Settlement, Settlement Received, Waiting Approval, Approved. '
-     'Baris settlement digenerate otomatis (read-only source) saat tombol Settlement diklik.', italic=True)
+para('Kolom yang dapat diedit saat Waiting Settlement (belum terkunci) hanya: Refund Amount, Taxes, '
+     'Charge Type. Setelah Settlement diklik lagi (Save/kunci) atau Settlement Received, baris menjadi '
+     'read-only. Set to Draft membuka kunci dan mengembalikan ke Waiting Settlement (jika deposit '
+     'sudah dibayar). Tab Deposit terkunci permanen setelah deposit bill dibayar.', italic=True)
 
 h2('7.5 Tab FTM Operations')
 para('Snapshot baris operasi FTM (product, PO, qty, UOM, currency, taxable values). Seluruhnya read-only, '
@@ -307,6 +374,9 @@ table(['Field', 'Rumus / Arti'], [
 
 # ============ 8 ============
 h1('8. Panduan Step-by-Step per Stage')
+para('Pada setiap stage di bawah ini disertakan keterangan apakah Journal Accounting tercipta. '
+     'Jika ya, ditampilkan contoh Debit–Credit dengan akun COA yang dipakai di database Karusindo '
+     '(angka contoh bersifat ilustrasi; nilai aktual mengikuti dokumen Anda).')
 
 h2('Stage 1 — Draft: Buat Dokumen Baru (Group: User)')
 para('Tujuan: Membuat dokumen deposit dan mengaitkannya ke FTM.')
@@ -318,13 +388,14 @@ number('Pada tab Deposit / Initial Charges, tambah baris: pilih Product (Uang Mu
 number('Klik Print Container Deposit untuk mencetak dokumen pengajuan ke Management (opsional).')
 number('Save.')
 para('Tombol aktif: Submit | Print Container Deposit | Cancel', bold=True)
-para('Jurnal Accounting: Belum ada.')
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 2 — Submit → Waiting Confirmation (Group: User)')
 number('Klik tombol Submit.')
 number('Validasi: minimal 1 baris deposit harus ada.')
 number('Status berubah menjadi Waiting Confirmation.')
 para('Tombol aktif: Confirm (Management) | Print Container Deposit | Set to Draft | Cancel', bold=True)
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 3 — Confirm → Confirmed (Group: Management)')
 para('Tujuan: Konfirmasi pengajuan dari user impor. Hanya group Management (atau Administrator) '
@@ -333,69 +404,148 @@ number('Management memeriksa dokumen (bisa dari print out Container Deposit).')
 number('Klik Confirm. Sistem re-sync data FTM (PO, picking, operasi).')
 number('Status → Confirmed.')
 para('Tombol aktif: Create Deposit Bill (Finance) | Mark Deposit Paid (Finance) | Set to Draft | Cancel', bold=True)
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 4a — Create Deposit Bill (Group: Finance)')
 para('Tujuan: Membuat Vendor Bill untuk pencatatan uang muka jaminan.')
 number('Klik Create Deposit Bill.')
-number('Sistem membuat 1 Vendor Bill per Vendor (group by vendor).')
-number('Buka bill → Review → Confirm (Post) → Register Payment.')
-para('Penomoran: bill memakai sequence journal Vendor Bill standar — BILL/YYYY/Romawi/#### '
-     '(contoh BILL/2026/VII/0097), menyambung nomor terakhir journal.', italic=True)
-para('Jurnal saat Post Bill: Dr Uang Muka 1700002/1700003 | Cr Utang Usaha.')
-para('Jurnal saat Register Payment: Dr Utang Usaha | Cr Bank/Kas.')
+number('Sistem membuat 1 Vendor Bill per Vendor (group by vendor). Saat create, bill masih Draft '
+       '(nomor "/") — belum ada journal.')
+number('Buka daftar Bills → pilih bill → klik Register Payment. Bill yang masih Draft akan '
+       'otomatis di-Post terlebih dahulu, lalu wizard pembayaran terbuka.')
+para('Pembayaran dilakukan per vendor: jika bill yang dipilih berasal dari vendor yang berbeda, '
+     'Register Payment diblokir dengan pop-up yang menampilkan daftar vendornya. Pilih hanya '
+     'bill dari vendor yang sama, lalu ulangi Register Payment untuk masing-masing vendor.', italic=True)
+para('Daftar Bills dari CDM: Register Payment highlighted; tanpa New / Upload / Create Landed Costs. '
+     'Cancel pada daftar Bills melepas tautan bill (jika belum ada payment).', italic=True)
+para('Setelah semua baris ter-bill: Create Deposit Bill tersembunyi; Mark Deposit Paid highlighted.', italic=True)
+
+para('Journal Accounting Terbentuk: YA — saat Vendor Bill di-Post, lalu saat Register Payment.', bold=True)
+para('Contoh 1 — Post Vendor Bill (BILL/YYYY/Romawi/####), deposit Sewa Container Rp 2.500.000 + PPN 11%:')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Uang Muka Jaminan Sewa Container', '1720003', '2.500.000', '—',
+     'Mencatat uang muka jaminan sebagai aset sementara (bukan biaya impor)'],
+    ['PPN Masukan Lokal', '1500001', '275.000', '—',
+     'PPN Masukan atas bill deposit (jika baris memakai pajak PPN Lokal 11%)'],
+    ['Hutang Dagang IDR', '2101001', '—', '2.775.000',
+     'Kewajiban kepada vendor container atas bill deposit'],
+])
+para('Jika product = Uang Muka Jaminan Container, Debit memakai 1720002 (bukan 1720003).', italic=True)
+para('Contoh 2 — Register Payment bill di atas melalui Bank BCA (entry BB/YYYY/Romawi/####):')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Hutang Dagang IDR', '2101001', '2.775.000', '—',
+     'Melunasi hutang vendor atas deposit bill'],
+    ['Bank BCA - 3863018877', '1102001', '—', '2.775.000',
+     'Kas keluar dari bank; jika bayar via Kas Besar → Credit 1101040'],
+])
+para('Penomoran: Bill = BILL/YYYY/Romawi/####; Payment = sequence journal Bank/Kas (BB/… atau KB/…).', italic=True)
 
 h2('Stage 4b — Mark Deposit Paid → Deposit Paid (Group: Finance)')
 number('Setelah pembayaran dilakukan, klik Mark Deposit Paid.')
-number('Validasi: Deposit Amount > 0.')
+number('Validasi: Deposit Amount > 0; Vendor Bill deposit harus sudah dibuat; dan SEMUA bill harus '
+       'berstatus Posted serta Paid / In Payment. Jika ada bill yang belum dibayar penuh, sistem '
+       'menampilkan daftar bill tersebut dan status tidak berubah.')
 number('Status → Deposit Paid.')
+para('Jurnal Accounting: tidak ada.', bold=True)
+para('(Hanya mengubah status dokumen CDM; journal sudah terbentuk di Stage 4a.)', italic=True)
 
 h2('Stage 5 — Settlement → Waiting Settlement (Group: Finance)')
 para('Tujuan: Memulai proses settlement setelah container dikembalikan vendor.')
-number('Klik Settlement.')
-number('Sistem generate baris settlement dari baris deposit (Source Deposit Line, Original Amount, dsb. read-only).')
-number('Status → Waiting Settlement.')
+number('Klik Settlement (klik pertama).')
+number('Sistem generate baris settlement dari baris deposit. Landed Cost Product / Charge dan '
+       'Charge Account otomatis terisi dari tabel mapping (bab 3.3) dan bersifat read-only.')
+number('Status → Waiting Settlement. Tombol Settlement tetap highlighted (hijau) — input masih terbuka.')
 number('Isi Refund Amount per baris; Final Deducted Charge otomatis = Original − Refund.')
-number('Pilih Landed Cost Product / Charge (produk dengan Is a Landed Cost = True) dan Charge Type.')
+number('Sesuaikan Charge Type dan Taxes bila perlu, lalu klik Settlement lagi (klik kedua = Save).')
+number('Baris settlement terkunci (settlement_locked). Tombol yang di-highlight hijau: '
+       'Set to Draft dan Settlement Received. Refund Amount tidak bisa diedit tanpa Set to Draft.')
+para('Koreksi Refund Amount: klik Set to Draft → kembali Waiting Settlement, kunci dibuka → perbaiki → '
+     'klik Settlement lagi untuk mengunci. Tombol Cancel disembunyikan di tahap ini.', italic=True)
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 6 — Settlement Received (Group: Finance)')
 number('Klik Settlement Received setelah nilai settlement final dari vendor diterima.')
 number('Validasi: settlement lines ada; refund/charge tidak negatif.')
 number('Status → Settlement Received.')
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 7 — Request Approval → Waiting Approval (Group: Finance)')
 number('Klik Request Approval.')
 number('Validasi: Settlement Balance harus = 0.')
 number('Status → Waiting Approval.')
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 8 — Approve → Approved (Group: Management)')
 number('Management memeriksa dan klik Approve.')
 number('Status → Approved.')
-para('Tombol aktif: Create Refund Credit Note (Accounting) | Create FTM Landed Cost (Accounting) | '
-     'Mark Posted (Accounting) | Set to Draft | Cancel', bold=True)
+para('Tombol aktif (sebelum refund dibayar): Create Refund Credit Note (hijau) | Set to Draft (hijau) | '
+     'Create FTM Landed Cost (polos) | Mark Posted (polos). Cancel disembunyikan.', bold=True)
+para('Jurnal Accounting: tidak ada.', bold=True)
 
 h2('Stage 9a — Create Refund Credit Note (Group: Accounting)')
 para('Tujuan: Membuat Vendor Credit Note untuk nilai refund dari vendor.')
 number('Klik Create Refund Credit Note.')
-number('Sistem membuat CN per vendor untuk baris refund > 0 yang belum ber-CN.')
-number('Buka CN → Post → proses penerimaan/rekonsiliasi refund.')
-para('Penomoran: Credit Note memakai sequence refund journal — RBILL/YYYY/Romawi/#### '
-     '(contoh RBILL/2026/VII/0005), menyambung nomor terakhir. Nomor tidak lagi tampil "/" setelah Post.', italic=True)
-para('Jurnal saat Post CN: Dr Utang Usaha | Cr Uang Muka 1700002/1700003.')
+number('Sistem membuat CN per vendor untuk baris refund > 0 yang belum ber-CN (masih Draft — belum journal).')
+number('Form CN dari CDM: tanpa CREATE STTF / VIEW STTF; Reset to Draft hanya satu tombol.')
+number('Buka CN → Post → Register Payment / rekonsiliasi hingga status Paid.')
+para('Setelah SEMUA Refund Credit Note Posted & Paid: Create Refund Credit Note dan Set to Draft '
+     'hilang; Create FTM Landed Cost menjadi hijau.', italic=True)
+
+para('Journal Accounting Terbentuk: YA — saat Credit Note di-Post, lalu saat Register Payment (kas masuk).', bold=True)
+para('Contoh 1 — Post Vendor Credit Note (RBILL/YYYY/Romawi/####), refund Rp 500.000 + PPN 11% '
+     '(contoh dari settlement Sewa Container):')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Hutang Dagang IDR', '2101001', '555.000', '—',
+     'Mengurangi hutang / membentuk saldo hutang negatif siap direkonsiliasi dengan refund'],
+    ['Uang Muka Jaminan Sewa Container', '1720003', '—', '500.000',
+     'Clear sebagian aset uang muka sesuai nilai refund'],
+    ['PPN Masukan Lokal', '1500001', '—', '55.000',
+     'Menyesuaikan PPN Masukan terkait refund (jika CN memakai pajak)'],
+])
+para('Contoh 2 — Register Payment / penerimaan refund ke Bank BCA:')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Bank BCA - 3863018877', '1102001', '555.000', '—',
+     'Kas masuk dari vendor atas refund deposit'],
+    ['Hutang Dagang IDR', '2101001', '—', '555.000',
+     'Merealisasikan pelunasan / rekonsiliasi CN refund'],
+])
+para('Penomoran: CN = RBILL/YYYY/Romawi/####; Payment = sequence journal Bank/Kas yang dipakai.', italic=True)
 
 h2('Stage 9b — Create FTM Landed Cost (Group: Accounting)')
 para('Tujuan: Membebankan HANYA Final Deducted Charge ke biaya barang impor.')
 number('Pastikan Transfers/Receipts dari FTM ada dan setiap baris charge > 0 memiliki Landed Cost Product.')
-number('Klik Create FTM Landed Cost → sistem membuat draft stock.landed.cost.')
-number('Buka Landed Cost → Compute → Validate.')
-para('Jurnal saat Validate: Dr Stock Valuation/Expense | Cr Interim/Contra (hanya sebesar Final Deduction).')
+number('Klik Create FTM Landed Cost → sistem membuat draft stock.landed.cost tertaut FTM & CDM '
+       '(belum ada journal; tab Journal Items belum tampil).')
+number('Buka Landed Cost → klik Compute (diizinkan untuk LC dari CDM sejak v49) → Validate.')
+number('Setelah Validate berhasil: status LC Posted/Done, field Journal Entry terisi (mis. JLC/2026/VIII/0001), '
+       'dan tab Journal Items muncul di samping Additional Costs serta Valuation Adjustments.')
+para('Tab Journal Items (sejak modul v16.0.1.0.50): menampilkan baris account.move.line dari journal entry LC '
+     '(Account, Label, Debit, Credit — read-only, dengan total). Gunakan tab ini untuk memeriksa '
+     'transaksi accounting tanpa membuka form Journal Entry terpisah.', italic=True)
+para('Catatan: Original Value = stock valuation layer receipt (bukan Taxable Value FTM). '
+     'Additional Landed Cost = Final Deduction. Saat Validate: porsi qty on-hand → nilai stok (1300000); '
+     'porsi sudah keluar (“already out”) → HPP/COGS produk (5201000) melalui 1320002.', italic=True)
+
+para('Journal Accounting Terbentuk: YA — saat Landed Cost di-Validate (bukan saat Create / Compute).', bold=True)
+para('Contoh — Validate LC Final Deduction Rp 1.900.000 (semua qty masih di gudang), '
+     'charge account Biaya Sewa Container:')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Persediaan Penjualan', '1300000', '1.900.000', '—',
+     'Menambah nilai persediaan sesuai Additional Landed Cost (porsi on-hand)'],
+    ['Biaya Sewa Container (Demurrage)', '6130006', '—', '1.900.000',
+     'Contra / clearing akun charge LC; untuk jaminan container biasanya 6130016'],
+])
+para('Jika seluruh qty sudah keluar saat Validate, net Persediaan = 0 dan seluruh Additional LC masuk '
+     'Debit 5201000 (terlihat di tab Journal Items sebagai baris berlabel “already out”). '
+     'Itu perilaku standar Odoo, bukan kesalahan distribusi.', italic=True)
 
 h2('Stage 10 — Mark Posted → Done (Group: Accounting)')
 para('Tujuan: Menyelesaikan proses. Posted dan Done adalah satu langkah.')
 number('Klik Mark Posted.')
 number('Validasi: jika ada Final Deducted Charge > 0, FTM Landed Cost harus sudah dibuat.')
 number('Status langsung → Done. Proses Container Deposit Management selesai.')
-para('Catatan: Mark Posted tidak membuat journal baru; journal sudah tercipta saat Post Bill/CN/Payment '
-     'dan Validate Landed Cost.', italic=True)
+para('Jurnal Accounting: tidak ada.', bold=True)
+para('(Hanya menutup status dokumen CDM; journal sudah tercipta di Stage 4a, 9a, dan 9b.)', italic=True)
 
 # ============ 9 ============
 h1('9. Fungsi Setiap Tombol')
@@ -404,17 +554,21 @@ table(['Tombol', 'Terlihat di Status', 'Group', 'Fungsi / Validasi Utama'], [
     ['Submit', 'Draft', 'User', 'Kirim ke Waiting Confirmation; minimal 1 deposit line'],
     ['Print Container Deposit', 'Draft, Waiting Confirmation, Confirmed', 'User', 'Cetak PDF pengajuan ke Management'],
     ['Confirm', 'Waiting Confirmation', 'Management', 'Konfirmasi + sync FTM'],
-    ['Set to Draft', 'Semua kecuali Draft & Cancelled', 'Sesuai owner status', 'Kembalikan ke Draft + batalkan dokumen terkait'],
-    ['Create Deposit Bill', 'Confirmed, Deposit Paid', 'Finance', 'Buat Vendor Bill per vendor (BILL/…)'],
-    ['Mark Deposit Paid', 'Confirmed', 'Finance', 'Tandai deposit dibayar; Deposit Amount > 0'],
-    ['Settlement', 'Deposit Paid, Waiting Settlement', 'Finance', 'Mulai settlement; generate lines'],
-    ['Settlement Received', 'Waiting Settlement', 'Finance', 'Settlement diterima; amount ≥ 0'],
+    ['Set to Draft', 'Semua kecuali Draft; hilang di Approved setelah refund paid', 'Sesuai owner status',
+     'Jika deposit sudah dibayar & dari tahap settlement+: kembali ke Waiting Settlement + buka kunci. '
+     'Selain itu → Draft. Deposit bill yang sudah dibayar tidak dibatalkan.'],
+    ['Create Deposit Bill', 'Confirmed, Deposit Paid (hilang jika semua baris ter-bill)', 'Finance', 'Buat Vendor Bill per vendor (BILL/…)'],
+    ['Mark Deposit Paid', 'Confirmed (highlighted setelah semua baris ter-bill)', 'Finance', 'Tandai deposit dibayar; semua bill wajib Posted & Paid/In Payment'],
+    ['Settlement', 'Deposit Paid, Waiting Settlement', 'Finance',
+     'Klik-1: generate lines + buka input (hijau). Klik-2: kunci settlement (settlement_locked)'],
+    ['Settlement Received', 'Waiting Settlement (hijau saat terkunci)', 'Finance', 'Settlement diterima; amount ≥ 0; mengunci baris'],
     ['Request Approval', 'Settlement Received', 'Finance', 'Ajukan approval; Settlement Balance = 0'],
     ['Approve', 'Waiting Approval', 'Management', 'Setujui settlement'],
-    ['Create Refund Credit Note', 'Approved', 'Accounting', 'Buat Vendor Credit Note refund (RBILL/…)'],
-    ['Create FTM Landed Cost', 'Approved', 'Accounting', 'Buat draft Landed Cost FTM'],
-    ['Mark Posted', 'Approved', 'Accounting', 'Selesaikan dokumen → Done; landed cost wajib jika ada deduction'],
-    ['Cancel', 'Semua kecuali Cancelled', 'Sesuai owner status', 'Batalkan dokumen + dokumen accounting terkait'],
+    ['Create Refund Credit Note', 'Approved (hijau; hilang setelah refund paid)', 'Accounting', 'Buat Vendor Credit Note refund (RBILL/…)'],
+    ['Create FTM Landed Cost', 'Approved (hijau setelah refund paid; polos sebelumnya)', 'Accounting', 'Buat draft Landed Cost FTM; Compute diizinkan'],
+    ['Mark Posted', 'Approved (polos)', 'Accounting', 'Selesaikan dokumen → Done; landed cost wajib jika ada deduction'],
+    ['Cancel', 'Draft s.d. Deposit Paid & Done (disembunyikan di tahap settlement/Approved)', 'Sesuai owner status',
+     'Batalkan dokumen; deposit bill yang sudah dibayar tidak dibatalkan'],
 ])
 para('Administrator dapat melihat dan mengeksekusi seluruh tombol pada semua status.', italic=True)
 
@@ -428,50 +582,169 @@ table(['Smart Button', 'Muncul Jika', 'Fungsi'], [
 
 # ============ 10 ============
 h1('10. Cancel & Set to Draft')
-para('Kedua tombol tersedia pada seluruh status aktif (Draft s.d. Done untuk Cancel; '
-     'Waiting Confirmation s.d. Done untuk Set to Draft), dengan hak akses mengikuti owner status '
-     '(lihat matriks bab 4.2).')
+para('Cancel tersedia pada Draft s.d. Deposit Paid serta Done; disembunyikan pada Waiting Settlement, '
+     'Settlement Received, Waiting Approval, dan Approved (koreksi settlement memakai Set to Draft). '
+     'Set to Draft tersedia pada semua status selain Draft (dan hilang di Approved setelah refund paid).')
 
-h2('10.1 Validasi Otomatis')
-bullet('DIBLOKIR jika ada FTM Landed Cost yang sudah divalidasi (state Done) — karena sudah mengubah '
-       'nilai persediaan/product. Reverse landed cost terlebih dahulu bila dokumen harus dibuka kembali.')
-bullet('DIBLOKIR jika ada Vendor Bill / Credit Note yang sudah dibayar (paid/partial).')
+h2('10.1 Perilaku Set to Draft setelah deposit dibayar')
+bullet('Dari Waiting Settlement / Settlement Received / Waiting Approval / Approved / Done / Cancelled: '
+       'status kembali ke Waiting Settlement; kunci settlement dibuka (Refund Amount bisa diedit).')
+bullet('Deposit Vendor Bill yang sudah dibayar tidak dibatalkan dan tetap tertaut — tab Deposit tetap read-only.')
+bullet('Refund Credit Note / journal settlement / Landed Cost draft yang belum dibayar dibatalkan dan dilepas tautannya.')
 
-h2('10.2 Yang Dilakukan Sistem Saat Cancel / Set to Draft')
-number('Vendor Bill, Credit Note, dan Journal Entry terkait yang masih draft/posted (belum dibayar) '
-       'di-set ke draft lalu dibatalkan.')
+h2('10.2 Validasi Otomatis')
+bullet('DIBLOKIR jika ada FTM Landed Cost yang sudah divalidasi (state Done) — reverse landed cost terlebih dahulu.')
+bullet('DIBLOKIR jika ada dokumen settlement (Refund CN / journal) yang sudah dibayar — batalkan payment-nya dulu.')
+bullet('Deposit bill yang sudah paid TIDAK memblokir Set to Draft / Cancel (uang deposit memang sudah keluar).')
+
+h2('10.3 Yang Dilakukan Sistem Saat Cancel / Set to Draft')
+number('Dokumen settlement terkait yang belum dibayar di-set draft lalu dibatalkan.')
 number('Landed Cost draft dibatalkan.')
-number('Link dokumen pada baris deposit/settlement dibersihkan sehingga smart buttons '
-       '(Action Toolbar) ter-update — tidak lagi menampilkan hitungan dokumen lama.')
-number('Status dokumen menjadi Cancelled (Cancel) atau Draft (Set to Draft).')
+number('Link refund/landed cost/journal pada settlement dibersihkan; link deposit bill yang sudah dibayar dipertahankan.')
+number('Status → Cancelled (Cancel) atau Waiting Settlement / Draft (Set to Draft, tergantung apakah deposit sudah dibayar).')
+para('Untuk Stage 4a (Deposit Bill), 9a (Refund Credit Note), dan 9b (FTM Landed Cost) yang sudah membentuk '
+     'journal accounting, ikuti SOP detail di Bab 11 (prasyarat reverse/cancel, contoh Debit–Credit, dan dampak audit).', italic=True)
 
 # ============ 11 ============
-h1('11. Ringkasan Jurnal Accounting per Langkah')
+h1('11. SOP Cancel pada Stage 4a, 9a, dan 9b (Journal & Audit)')
+para('Bab ini menjelaskan proses yang harus dilakukan SEBELUM Cancel / Set to Draft dapat dijalankan '
+     'dengan bersih pada tiga stage yang menghasilkan journal accounting, lengkap dengan contoh Debit–Credit '
+     'dan dampaknya terhadap audit. Akun contoh mengikuti COA Karusindo; angka bersifat ilustrasi.')
+
+h2('11.1 Prinsip Umum')
+bullet('Tombol Cancel / Set to Draft pada form CDM tidak menghapus jejak akuntansi di Bank/Kas atau valuasi stok.')
+bullet('Yang dibatalkan otomatis oleh CDM hanya dokumen yang belum dibayar dan belum mengubah valuasi inventori.')
+bullet('Jika uang sudah keluar/masuk atau Landed Cost sudah Validate, balikkan transaksi accounting dulu (SOP), '
+       'baru dokumen CDM dibatalkan atau dibuka ulang.')
+bullet('Jangan menghapus journal posted dari database. Auditor mengharapkan jejak: transaksi awal → reverse/cancel → alasan.')
+
+h2('11.2 Stage 4a — Create Deposit Bill (Post Bill + Register Payment)')
+para('Dokumen yang biasanya sudah terbentuk: Vendor Bill posted (BILL/…) dan Payment posted (BB/… atau KB/…).')
+para('Contoh journal saat terbentuk (deposit Sewa Container Rp 2.500.000 + PPN 11%):')
+table(['Saat', 'Akun', 'Kode', 'Debit', 'Credit'], [
+    ['Post Bill', 'Uang Muka Jaminan Sewa Container', '1720003', '2.500.000', '—'],
+    ['Post Bill', 'PPN Masukan Lokal', '1500001', '275.000', '—'],
+    ['Post Bill', 'Hutang Dagang IDR', '2101001', '—', '2.775.000'],
+    ['Payment', 'Hutang Dagang IDR', '2101001', '2.775.000', '—'],
+    ['Payment', 'Bank BCA (atau Kas Besar)', '1102001 / 1101040', '—', '2.775.000'],
+])
+
+para('Proses wajib sebelum Cancel CDM benar-benar membersihkan akuntansi:', bold=True)
+number('Batalkan / reverse Payment di Accounting (Reset to Draft → Cancel, atau reverse payment sesuai SOP).')
+number('Setelah bill unpaid: Bill → Reset to Draft → Cancel; atau di list Bills CDM pakai tombol Cancel '
+       '(hanya jika belum ada payment).')
+number('Baru Cancel / Set to Draft pada dokumen CDM (jika masih di Confirmed / Deposit Paid).')
+para('Catatan CDM: bill deposit yang sudah paid tidak dibatalkan otomatis oleh Cancel/Set to Draft CDM '
+     '(uang memang sudah keluar). Tanpa reverse payment, status CDM bisa berubah tetapi GL tetap berisi '
+     'uang muka & kas — rawan selisih rekonsiliasi.', italic=True)
+
+para('Contoh journal saat reverse/cancel Stage 4a:')
+table(['Langkah', 'Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Reverse Payment', 'Bank BCA', '1102001', '2.775.000', '—', 'Netralisasi kas keluar'],
+    ['Reverse Payment', 'Hutang Dagang IDR', '2101001', '—', '2.775.000', 'Hutang muncul lagi (bill unpaid)'],
+    ['Cancel Bill', 'Hutang Dagang IDR', '2101001', '2.775.000', '—', 'Hapus hutang'],
+    ['Cancel Bill', 'Uang Muka Jaminan Sewa Container', '1720003', '—', '2.500.000', 'Hapus aset uang muka'],
+    ['Cancel Bill', 'PPN Masukan Lokal', '1500001', '—', '275.000', 'Hapus PPN masukan'],
+])
+
+h2('11.3 Stage 9a — Create Refund Credit Note (Post CN + Terima Refund)')
+para('Dokumen yang biasanya sudah terbentuk: Vendor Credit Note posted (RBILL/…) dan Payment / penerimaan refund.')
+para('Contoh journal saat terbentuk (refund Rp 500.000 + PPN 11%):')
+table(['Saat', 'Akun', 'Kode', 'Debit', 'Credit'], [
+    ['Post CN', 'Hutang Dagang IDR', '2101001', '555.000', '—'],
+    ['Post CN', 'Uang Muka Jaminan Sewa Container', '1720003', '—', '500.000'],
+    ['Post CN', 'PPN Masukan Lokal', '1500001', '—', '55.000'],
+    ['Terima refund', 'Bank BCA', '1102001', '555.000', '—'],
+    ['Terima refund', 'Hutang Dagang IDR', '2101001', '—', '555.000'],
+])
+
+para('Proses wajib sebelum Set to Draft CDM:', bold=True)
+number('CDM memblokir jika Refund CN sudah paid/partial — batalkan / reverse payment refund terlebih dahulu.')
+number('CN → Reset to Draft → Cancel (atau biarkan dibatalkan otomatis oleh Set to Draft CDM setelah unpaid).')
+number('Set to Draft pada form CDM (kembali ke Waiting Settlement untuk koreksi Refund Amount). '
+       'Tombol Cancel disembunyikan di tahap Approved; jalur koreksi = Set to Draft.')
+
+para('Contoh journal saat reverse/cancel Stage 9a:')
+table(['Langkah', 'Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Reverse penerimaan refund', 'Hutang Dagang IDR', '2101001', '555.000', '—', 'Saldo CN terbuka lagi'],
+    ['Reverse penerimaan refund', 'Bank BCA', '1102001', '—', '555.000', 'Netralisasi kas masuk'],
+    ['Cancel Credit Note', 'Uang Muka Jaminan Sewa Container', '1720003', '500.000', '—', 'Kembalikan aset uang muka'],
+    ['Cancel Credit Note', 'PPN Masukan Lokal', '1500001', '55.000', '—', 'Kembalikan PPN'],
+    ['Cancel Credit Note', 'Hutang Dagang IDR', '2101001', '—', '555.000', 'Hapus dampak CN'],
+])
+para('Setelah koreksi angka Refund Amount, buat Credit Note baru (nomor RBILL baru). '
+     'Jangan mengedit CN posted lama tanpa jejak.', italic=True)
+
+h2('11.4 Stage 9b — Create FTM Landed Cost (Compute + Validate)')
+para('Draft LC (baru Create/Compute) belum membentuk journal. Journal terbentuk saat Validate.')
+para('Contoh journal saat Validate (semua qty masih di gudang, Final Deduction Rp 1.900.000):')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Persediaan Penjualan', '1300000', '1.900.000', '—', 'Naikkan nilai stok (porsi on-hand)'],
+    ['Biaya Sewa Container (Demurrage)', '6130006', '—', '1.900.000', 'Clearing charge LC (jaminan container: 6130016)'],
+])
+para('Jika sebagian qty sudah keluar, porsi terjual biasanya Debit 5201000 Pembelian Barang Penjualan (COGS).', italic=True)
+
+para('Proses wajib sebelum Cancel / Set to Draft CDM:', bold=True)
+number('CDM memblokir jika LC state = done (sudah Validate).')
+number('Reverse Landed Cost di form LC (prosedur inventori) — menghasilkan journal balik dan koreksi stock valuation layer.')
+number('Setelah LC tidak lagi done / sudah di-reverse, baru Set to Draft atau Cancel CDM.')
+number('Jika LC masih draft: CDM dapat membatalkan LC draft tanpa journal (karena journal belum ada).')
+
+para('Contoh journal saat Reverse Landed Cost:')
+table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
+    ['Biaya Sewa Container (Demurrage)', '6130006', '1.900.000', '—', 'Balik clearing charge'],
+    ['Persediaan Penjualan', '1300000', '—', '1.900.000', 'Turunkan kembali nilai stok'],
+])
+para('Qty stok tidak berubah; yang berubah hanya nilai. Jika ada porsi COGS 5201000, porsi itu juga dibalik.', italic=True)
+
+h2('11.5 Ringkasan: Kapan Bisa Cancel Langsung')
+table(['Stage', 'Kondisi dokumen', 'Cancel / Set to Draft CDM langsung?', 'Yang harus dilakukan dulu'], [
+    ['4a', 'Bill draft', 'Ya (atau Cancel di list Bills)', '—'],
+    ['4a', 'Bill posted, belum bayar', 'Ya / Cancel list Bills', '—'],
+    ['4a', 'Bill paid', 'CDM tidak menghapus bill/payment', 'Reverse payment → Cancel bill'],
+    ['9a', 'CN draft / posted unpaid', 'Ya (Set to Draft)', '—'],
+    ['9a', 'CN paid', 'Diblokir', 'Reverse payment refund → Set to Draft'],
+    ['9b', 'LC draft', 'Ya', 'CDM batalkan LC draft'],
+    ['9b', 'LC validated (done)', 'Diblokir', 'Reverse LC terlebih dahulu'],
+])
+
+h2('11.6 Dampak terhadap Audit Accounting')
+bullet('Audit trail tetap utuh: nomor BILL / RBILL / BB / KB / LC serta journal reverse tetap di General Ledger — ini yang diharapkan auditor.')
+bullet('Berbahaya bagi audit: mengubah status CDM tanpa membalik journal terkait → CDM “kosong/ulang” tetapi Bank, Hutang, Uang Muka, atau Persediaan masih berisi angka lama.')
+bullet('Dokumentasikan alasan di chatter CDM dan pada dokumen accounting (kesalahan input, koreksi refund, LC salah, dll.).')
+bullet('Perhatian cut-off: reverse di periode berbeda dari transaksi awal muncul sebagai koreksi periode berjalan — siapkan penjelasan management.')
+bullet('Stage 9b paling sensitif (valuasi inventori & HPP). Stage 4a/9a lebih ke kas, hutang, dan uang muka.')
+bullet('Jangan menghapus entry posted dari database; selalu gunakan Cancel / Reverse standar Odoo.')
+
+# ============ 12 ============
+h1('12. Ringkasan Jurnal Accounting per Langkah')
 table(['Langkah', 'Membuat Journal?', 'Jenis Dokumen', 'Pola Jurnal (sederhana)'], [
     ['Submit / Confirm', 'Tidak', '—', '—'],
-    ['Create Deposit Bill + Post Bill', 'Ya', 'Vendor Bill (BILL/YYYY/Romawi/####)', 'Dr Uang Muka 1700002/03 | Cr Utang Usaha'],
+    ['Create Deposit Bill + Post Bill', 'Ya', 'Vendor Bill (BILL/YYYY/Romawi/####)', 'Dr Uang Muka 1720002/03 | Cr Utang Usaha'],
     ['Register Payment Bill', 'Ya', 'Payment', 'Dr Utang Usaha | Cr Bank'],
     ['Mark Deposit Paid', 'Tidak', 'Status saja', '—'],
     ['Settlement / Received / Request / Approve', 'Tidak', '—', '—'],
-    ['Create Refund CN + Post CN', 'Ya', 'Vendor Credit Note (RBILL/YYYY/Romawi/####)', 'Dr Utang Usaha | Cr Uang Muka 1700002/03'],
+    ['Create Refund CN + Post CN', 'Ya', 'Vendor Credit Note (RBILL/YYYY/Romawi/####)', 'Dr Utang Usaha | Cr Uang Muka 1720002/03'],
     ['Payment / settle CN refund', 'Ya', 'Payment', 'Dr Bank | Cr Utang Usaha (kas masuk)'],
     ['Create + Validate FTM Landed Cost', 'Ya', 'stock.landed.cost via Landed Cost Journal', 'Dr Stock/Expense | Cr Interim/Contra (hanya Final Deduction)'],
     ['Mark Posted (→ Done) / Cancel', 'Tidak', 'Status saja', '—'],
 ])
 
-h2('11.1 Penomoran Dokumen Accounting')
+h2('12.1 Penomoran Dokumen Accounting')
 bullet('Draft bill/CN selalu bernomor "/" sampai di-Post.')
 bullet('Saat Post: Vendor Bill mengikuti sequence journal BILL/YYYY/Romawi/#### dan Credit Note '
        'RBILL/YYYY/Romawi/####, menyambung nomor terakhir pada bulan berjalan.')
+bullet('Journal entry payment dari CDM mengikuti Entry Sequence journal Bank/Kas yang dipilih '
+       '(contoh BB/YYYY/Romawi/#### atau KB/YYYY/Romawi/####), menyambung nomor terakhir journal.')
 bullet('Dokumen lama berformat CD-BILL-*/CD-CN-* (versi sebelumnya) tidak diubah.')
 
-h2('11.2 Apa yang TIDAK boleh masuk Landed Cost')
-bullet('Nilai penuh deposit awal (uang muka jaminan) — tetap di aset 1700002/1700003 sampai '
+h2('12.2 Apa yang TIDAK boleh masuk Landed Cost')
+bullet('Nilai penuh deposit awal (uang muka jaminan) — tetap di aset 1720002/1720003 sampai '
        'di-clear oleh refund/deduction.')
 bullet('Produk Uang Muka Jaminan Container/Sewa — jangan diaktifkan sebagai Landed Cost product.')
 
-# ============ 12 ============
-h1('12. Aturan Settlement Balance & Validasi')
+# ============ 13 ============
+h1('13. Aturan Settlement Balance & Validasi')
 para('Settlement Balance = Deposit Amount − Refund Amount − Final Deducted Charge', bold=True)
 para('Harus = 0 sebelum Request Approval.')
 para('Contoh valid:')
@@ -493,20 +766,22 @@ bullet('Refund dan Charge tidak boleh negatif.')
 bullet('Refund + Final Charge tidak boleh melebihi Original Deposit Amount.')
 bullet('Jika Charge > 0, product wajib landed_cost_ok = True.')
 
-# ============ 13 ============
-h1('13. Contoh Kasus End-to-End')
+# ============ 14 ============
+h1('14. Contoh Kasus End-to-End')
 para('Skenario: Import FTM-ABC; deposit container Rp 10.000.000; setelah return, vendor refund '
      'Rp 7.500.000 dan potong detention Rp 2.500.000.')
-h2('13.1 Langkah Operasional')
-number('[User] Buat dokumen CD → pilih FTM → isi baris Uang Muka Jaminan Container Rp 10.000.000 (akun 1700002) → Print Container Deposit → Submit.')
+h2('14.1 Langkah Operasional')
+number('[User] Buat dokumen CD → pilih FTM → isi baris Uang Muka Jaminan Container Rp 10.000.000 (akun 1720002 auto) → Print Container Deposit → Submit.')
 number('[Management] Confirm.')
-number('[Finance] Create Deposit Bill → Post Bill (BILL/2026/VII/…) → Register Payment Rp 10.000.000 → Mark Deposit Paid.')
-number('[Finance] Settlement → isi Refund 7.500.000 → Final Deduction auto 2.500.000 → pilih produk landed cost Detention → Settlement Received → Request Approval (balance 0).')
+number('[Finance] Create Deposit Bill → Post Bill (BILL/2026/VII/…) → Register Payment Rp 10.000.000 → Mark Deposit Paid (tombol highlighted setelah bill dibayar).')
+number('[Finance] Settlement (klik-1) → auto-fill product & account → isi Refund 7.500.000 → '
+       'Settlement (klik-2, kunci) → Settlement Received → Request Approval (balance 0).')
 number('[Management] Approve.')
-number('[Accounting] Create Refund Credit Note Rp 7.500.000 → Post (RBILL/2026/VII/…) → terima/rekonsiliasi refund.')
-number('[Accounting] Create FTM Landed Cost Rp 2.500.000 → Compute → Validate.')
+number('[Accounting] Create Refund Credit Note Rp 7.500.000 → Post (RBILL/…) → bayar/rekonsiliasi hingga Paid '
+       '→ di form CDM tombol Create Refund CN & Set to Draft hilang; Create FTM Landed Cost hijau.')
+number('[Accounting] Create FTM Landed Cost Rp 2.500.000 → Compute → Validate → cek tab Journal Items.')
 number('[Accounting] Mark Posted → status langsung Done. Selesai.')
-h2('13.2 Ringkasan Dampak Accounting')
+h2('14.2 Ringkasan Dampak Accounting')
 table(['Event', 'Dampak'], [
     ['Bayar deposit', 'Aset Uang Muka +10jt; Bank −10jt'],
     ['Refund CN + kas masuk', 'Aset Uang Muka −7,5jt; Bank +7,5jt'],
@@ -514,11 +789,11 @@ table(['Event', 'Dampak'], [
     ['Saldo akhir Uang Muka terkait transaksi', '0'],
 ])
 
-# ============ 14 ============
-h1('14. Opsi Show/Hide Kolom (Tree View)')
+# ============ 15 ============
+h1('15. Opsi Show/Hide Kolom (Tree View)')
 para('Semua tree view mendukung pengaturan kolom melalui ikon pengaturan (⚙ / slider) di pojok kanan '
      'header tabel. Preferensi kolom tersimpan per user.')
-h2('14.1 List Utama Container Deposit Management')
+h2('15.1 List Utama Container Deposit Management')
 table(['Kolom', 'Default'], [
     ['Internal Reference, Status', 'Selalu tampil'],
     ['FTM Reference, Container Vendor, Deposit Amount, Settlement Balance', 'Show'],
@@ -526,45 +801,55 @@ table(['Kolom', 'Default'], [
     ['Initial Charge, Refund Amount, Final Deducted Charge', 'Hide'],
     ['Vendor Bills / Refunds / Landed Costs (jumlah)', 'Hide'],
 ])
-h2('14.2 Tab pada Form')
+h2('15.2 Tab pada Form')
 bullet('Deposit / Initial Charges: Description, Deposit Account, Vendor Bill, Note dapat di-show/hide (default hide).')
 bullet('Settlement: Source Deposit Line, Description, Split Method, Charge Account, Refund Credit Note, FTM Landed Cost, Note dapat di-show/hide (default hide).')
 bullet('FTM Operations: UOM, Currency, dan Taxable Value dapat di-show/hide (default hide).')
 
-# ============ 15 ============
-h1('15. Troubleshooting Umum')
+# ============ 16 ============
+h1('16. Troubleshooting Umum')
 table(['Gejala / Error', 'Penyebab Umum', 'Solusi'], [
     ['Please input at least one deposit line', 'Submit tanpa baris', 'Tambah baris deposit'],
     ['You are not allowed to … this Container Deposit document', 'User tidak punya group yang sesuai', 'Assign group yang benar di Settings → Users'],
     ['Deposit amount must be greater than zero', 'Mark Deposit Paid tanpa nilai', 'Isi amount > 0'],
+    ['The following Vendor Bills are not fully paid yet', 'Mark Deposit Paid sebelum semua bill Posted & Paid', 'Post dan Register Payment seluruh deposit bill terlebih dahulu'],
     ['Settlement balance must be zero…', 'Refund + Deduction ≠ Deposit', 'Sesuaikan angka hingga balance 0'],
     ['No receipt/transfer linked from FTM', 'FTM tanpa picking', 'Pastikan FTM punya Transfers'],
-    ['Product must have Landed Cost enabled', 'Salah pilih produk Uang Muka', 'Pilih produk charge landed_cost_ok'],
-    ['Account 1700002/03 not found', 'Akun belum ada / deprecated', 'Buat/aktifkan akun; upgrade modul'],
+    ['Product must have Landed Cost enabled', 'Produk landed cost hasil mapping belum ber-flag Is a Landed Cost', 'Aktifkan Is a Landed Cost pada produk Biaya Sewa Container / Biaya Perbaikan dan Kebersihan Container'],
+    ['Account 1720002/03 not found', 'Akun belum ada / deprecated', 'Buat/aktifkan akun; upgrade modul'],
+    ['Deposit Account must be either 1720002 … or 1720003 …', 'Akun deposit di luar 1720002/1720003 (mis. akun lama 1700002/1700003)', 'Pastikan Expense Account product = 1720002/1720003; upgrade modul ke 16.0.1.0.49'],
     ['Cannot cancel … validated FTM Landed Cost', 'Landed cost sudah Validate', 'Reverse landed cost dahulu bila perlu dibuka'],
-    ['Cannot cancel … already paid', 'Bill/CN sudah dibayar', 'Batalkan payment sesuai SOP dahulu'],
+    ['Cannot cancel … settlement document … paid', 'Refund CN/journal settlement sudah dibayar', 'Batalkan payment settlement dahulu'],
     ['Please create FTM landed cost before Posted', 'Ada deduction tapi belum LC', 'Create FTM Landed Cost dulu'],
     ['Nomor CN tampil "/"', 'CN masih draft (belum Post)', 'Post CN; nomor RBILL/… otomatis terisi'],
+    ['Another entry with the same name already exists', 'Penomoran journal entry payment bentrok', 'Sudah ditangani: payment CDM memakai sequence journal Bank/Kas. Upgrade CDM + pastikan sequence_reset_period ≥ 15.0.1.0.1'],
+    ['This landed cost was generated from custom declaration, so you can not recompute it', 'Blokir Compute dari viin_foreign_trade karena No FTM terisi', 'Upgrade CDM ≥ 16.0.1.0.49 — LC dari CDM boleh di-Compute'],
+    ['Refund Amount masih bisa diedit setelah Settlement', 'Belum klik Settlement kedua kali (belum terkunci)', 'Klik Settlement lagi untuk Save/kunci; atau lanjut Settlement Received'],
     ['KeyError rom_month saat save', 'Modul od_journal_sequence versi lama', 'Upgrade od_journal_sequence ≥ 14.0.4.0.1'],
     ['Partner must have Vendor status', 'Partner bukan vendor', 'Centang Is Vendor pada partner'],
 ])
 
-# ============ 16 ============
-h1('16. Checklist UAT')
+# ============ 17 ============
+h1('17. Checklist UAT')
 for item in [
-    'Upgrade modul ke 16.0.1.0.26 di DB test; akun 1700002 & 1700003 aktif.',
+    'Upgrade modul ke 16.0.1.0.49 di DB test; akun 1720002 & 1720003 aktif; sequence_reset_period ≥ 15.0.1.0.1.',
     'Nomor dokumen baru berformat CD/YYYY/Romawi/##### dan reset tiap bulan.',
     'Lima group (User, Management, Finance, Accounting, Administrator) muncul di Settings → Users.',
     'User tanpa group tidak melihat menu; setiap tombol hanya tampil untuk group-nya.',
+    'Deposit Account terisi otomatis 1720002/1720003 saat pilih Product / Charge, dan dokumen bisa di-Save tanpa error.',
     'Print Container Deposit menghasilkan PDF pengajuan.',
     'Confirm hanya bisa oleh Management; Approve hanya oleh Management.',
-    'Create Deposit Bill → Post → nomor BILL/YYYY/Romawi/#### menyambung sequence journal.',
-    'Create Refund CN → Post → nomor RBILL/YYYY/Romawi/#### (bukan "/").',
-    'Settlement: Final Deduction auto saat isi Refund; Request Approval gagal jika balance ≠ 0.',
-    'Create FTM Landed Cost hanya sebesar Final Deduction; Validate sukses ke picking FTM.',
-    'Mark Posted langsung mengubah status ke Done (tidak ada status Posted terpisah).',
-    'Record lama berstatus Posted otomatis menjadi Done setelah upgrade.',
-    'Cancel/Set to Draft membatalkan dokumen terkait & mengosongkan smart buttons; diblokir jika LC sudah Validate atau bill sudah dibayar.',
+    'Create Deposit Bill → daftar Bills tanpa New/Upload/Create Landed Cost; Register Payment hijau; multi-vendor diblokir.',
+    'Register Payment: draft bill auto-Post; journal entry payment berformat BB/… atau KB/… sesuai journal.',
+    'Setelah semua baris ter-bill: Create Deposit Bill hilang; Mark Deposit Paid highlighted.',
+    'Mark Deposit Paid ditolak jika ada bill yang belum Posted & Paid/In Payment.',
+    'Settlement klik-1: auto-fill product & account; klik-2: kunci Refund Amount; Set to Draft + Settlement Received hijau.',
+    'Set to Draft setelah deposit paid: kembali Waiting Settlement (bukan Draft); tab Deposit tetap read-only; Cancel disembunyikan.',
+    'Settlement: Final Deduction auto; Request Approval gagal jika balance ≠ 0.',
+    'Approved: Create Refund CN + Set to Draft hijau; setelah refund Paid → keduanya hilang; Create FTM Landed Cost hijau.',
+    'Form CN dari CDM tanpa CREATE STTF; Reset to Draft hanya satu tombol.',
+    'Create FTM Landed Cost → Compute sukses → Validate → tab Journal Items tampil berisi Debit/Credit journal LC.',
+    'Mark Posted langsung ke Done.',
     'Opsi show/hide kolom berfungsi di list utama dan tab Deposit/Settlement/FTM Operations.',
 ]:
     bullet('☐  ' + item)
@@ -586,15 +871,22 @@ para('Selain access rights model, setiap tombol workflow juga dicek di level ser
 h1('Lampiran B — Versi Dokumen')
 table(['Item', 'Nilai'], [
     ['Nama Modul', 'Import Container Deposit Management'],
-    ['Versi yang dianalisis', '16.0.1.0.26'],
-    ['Perubahan utama sejak 16.0.1.0.21', 'Hak akses berjenjang 5 group; Posted+Done digabung; sequence Romawi; penomoran BILL/RBILL standar; Cancel/Set to Draft; Print Container Deposit; show/hide kolom'],
+    ['Versi yang dianalisis', '16.0.1.0.50 (file panduan tetap v16_1_0_49)'],
+    ['Perubahan utama sejak 16.0.1.0.40',
+     'Settlement lock + highlight dinamis; Set to Draft dari settlement → Waiting Settlement; '
+     'Cancel disembunyikan di tahap settlement; form Bill/CN dari CDM dirapikan (tanpa STTF); '
+     'setelah refund paid → Create FTM Landed Cost hijau; COMPUTE LC dari CDM diizinkan; '
+     'payment Bank/Kas mengikuti sequence journal standar; Bab 11 SOP Cancel Stage 4a/9a/9b; '
+     'tab Journal Items pada Landed Cost setelah Validate (v50)'],
     ['Format panduan', 'Microsoft Word (.docx)'],
     ['Bahasa', 'Indonesia'],
-    ['Tanggal', '31 July 2026'],
+    ['Tanggal', '5 August 2026'],
 ])
 para('Dokumen ini disusun berdasarkan evaluasi source code modul (models, views, hooks, security, report, '
-     'migrations). Detail akun Debit/Kredit Landed Cost final dapat berbeda antar database tergantung '
-     'konfigurasi COA, product category, dan inventory valuation method.', italic=True)
+     'migrations) hingga versi 16.0.1.0.50. Detail akun Debit/Kredit Landed Cost final dapat berbeda antar '
+     'database tergantung konfigurasi COA, product category, dan inventory valuation method. '
+     'Bab 11 merujuk contoh akun COA Karusindo untuk SOP Cancel Stage 4a/9a/9b. '
+     'Tab Journal Items pada form LC muncul setelah Validate (field Journal Entry terisi).', italic=True)
 
 doc.save(DOC_PATH)
 print('Saved:', DOC_PATH)

@@ -195,7 +195,52 @@ Version 16.0.1.0.31
 
 Version 16.0.1.0.32
 -------------------
-- Cancel button returns the document to Draft (editable) instead of Cancelled.
-- After the form is saved or has progressed in the workflow, Cancel resets status to Draft so the record can be edited again.
-- Related accounting documents are still cancelled first when leaving a non-draft status (same safeguards as Set to Draft).
-- Previously cancelled documents can also be reopened to Draft via Cancel.
+- Cancelled documents can now be reopened: Set to Draft is available on Cancelled status (User group or Administrator), returning the document to Draft where it is editable again.
+
+
+Version 16.0.1.0.33
+-------------------
+- The bill list opened from the CDM document (Vendor Bills / Refunds smart buttons) now uses a restricted tree view: New, Upload, and Create Landed Costs are removed, and Register Payment is highlighted as the primary action.
+
+
+Version 16.0.1.0.34
+-------------------
+- Register Payment in the CDM bills list is now visually highlighted (Odoo 16 ignores the class attribute on list header buttons, so this is done via a scoped stylesheet).
+- Added a Cancel header button in the CDM bills list: cancels the selected bills/credit notes (blocked when payments exist) and unlinks them from the deposit/settlement lines, restoring the document to the state before Create Deposit Bill was clicked.
+
+
+Version 16.0.1.0.35
+-------------------
+- Fixed the Register Payment highlight not showing: Odoo 16 ships Bootstrap 5.1, which has no --bs-btn-* button variables (introduced in 5.2), so the stylesheet now sets background/border/text colors directly.
+
+
+Version 16.0.1.0.36
+-------------------
+- Register Payment highlight now uses the theme's own btn-primary styling (via Bootstrap's button-variant($primary) mixin at SCSS compile time) instead of a hardcoded color, so it matches other highlighted buttons such as Mark Deposit Paid.
+
+
+Version 16.0.1.0.37
+-------------------
+- Register Payment in the CDM bills list now posts selected draft bills automatically before opening the payment wizard, fixing the "You can only register payment for posted journal entries" error (the restricted list has no separate Post action).
+
+
+Version 16.0.1.0.38
+-------------------
+- Register Payment in the CDM bills list now blocks selections that mix bills of different vendors (clear popup listing the vendors), preventing the "Another entry with the same name already exists" error on Create Payment. Payment must be registered per vendor.
+
+
+Version 16.0.1.0.39
+-------------------
+- Fixed "Another entry with the same name already exists" when creating a payment for a single CDM bill: payment journal-entry numbering (od_journal_sequence vs the standard sequence mixin) could produce a name that already exists in the journal. CDM payments now pre-assign a verified unique entry name (P<CODE>/<year>/<roman>/#####) before posting.
+
+
+Version 16.0.1.0.40
+-------------------
+- CDM payment journal entries now follow the same numbering convention as Vendor Bills: drawn from the journal's own entry sequence (PREFIX/YYYY/Roman/#### with the sequence's padding), continuing the journal's last number, with a uniqueness guard that skips already-used numbers.
+- Repairs the literal '#CODE' placeholder left by od_journal_sequence in bank/cash journal sequence prefixes (replaced with the journal code) when a CDM payment is numbered.
+
+
+Version 16.0.1.0.51
+-------------------
+- Fixed Register Payment KeyError: 'rom_month' when posting draft CDM vendor bills.
+- Journal sequences that still use %(rom_month)s are normalized to %(Rmonth)s before post, with a roman-month interpolation fallback on ir.sequence so od_journal_sequence can finish numbering (e.g. BILL/2026/VIII/####).

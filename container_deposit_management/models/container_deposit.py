@@ -26,6 +26,8 @@ class ImportContainerDeposit(models.Model):
         'waiting_approval': GROUP_FINANCE,
         'approved': GROUP_MANAGEMENT,
         'done': GROUP_ACCOUNTING,
+        # A cancelled document can be reopened (Set to Draft) by the User group.
+        'cancel': GROUP_USER,
     }
 
     name = fields.Char(string='Internal Reference', required=True, copy=False, readonly=True, default='New')
@@ -94,6 +96,15 @@ class ImportContainerDeposit(models.Model):
     deposit_bills_paid = fields.Boolean(
         compute='_compute_billing_status',
         help='True when all deposit Vendor Bills are posted and paid/in payment.')
+    settlement_locked = fields.Boolean(
+        readonly=True, copy=False,
+        help='Set when the Settlement button is clicked again to save the '
+             'entered amounts: the settlement lines become read-only until '
+             'Set to Draft is used.')
+    refund_bills_paid = fields.Boolean(
+        compute='_compute_refund_status',
+        help='True when all refund Vendor Credit Notes are posted and '
+             'paid/in payment.')
 
     note = fields.Text(string='Internal Notes')
 
@@ -107,6 +118,18 @@ class ImportContainerDeposit(models.Model):
             bills = lines.mapped('vendor_bill_id').filtered(lambda m: m.state != 'cancel')
             rec.deposit_bills_paid = bool(bills) and all(
                 m.state == 'posted' and m.payment_state in ('paid', 'in_payment')
+                for m in bills
+            )
+
+    @api.depends('settlement_line_ids.refund_bill_id',
+                 'settlement_line_ids.refund_bill_id.state',
+                 'settlement_line_ids.refund_bill_id.payment_state')
+    def _compute_refund_status(self):
+        for rec in self:
+            bills = rec.settlement_line_ids.mapped('refund_bill_id').filtered(
+                lambda m: m.state != 'cancel')
+            rec.refund_bills_paid = bool(bills) and all(
+                m.state == 'posted' and m.payment_state in ('paid', 'in_payment', 'reversed')
                 for m in bills
             )
 
@@ -313,11 +336,21 @@ class ImportContainerDeposit(models.Model):
             journal_entries = rec.settlement_line_ids.mapped('journal_entry_id').exists()
             moves = (vendor_bills | refund_bills | journal_entries).filtered(lambda m: m.state != 'cancel')
 
-            for move in moves:
+            # Deposit bills that are already paid are part of the normal flow
+            # (bill -> payment -> Mark Deposit Paid). They represent money that
+            # really left the company, so Set to Draft / Cancel must NOT block
+            # on them nor cancel them: they are kept as-is, still linked to the
+            # deposit lines, and the workflow can be replayed over them.
+            paid_deposit_bills = vendor_bills.filtered(
+                lambda m: m.state != 'cancel'
+                and m.payment_state in ('paid', 'in_payment', 'partial'))
+
+            for move in moves - paid_deposit_bills:
                 if move.payment_state in ('paid', 'in_payment', 'partial'):
                     raise UserError(_(
-                        'Cannot cancel or set to draft because related accounting '
-                        'document %(move)s is already paid/partially paid.'
+                        'Cannot cancel or set to draft because settlement '
+                        'document %(move)s is already paid/partially paid.\n'
+                        'Cancel its payment first.'
                     ) % {'move': move.display_name})
                 if move.state == 'posted':
                     move.button_draft()
@@ -337,7 +370,11 @@ class ImportContainerDeposit(models.Model):
                     cost.write({'state': 'cancel'})
 
             # Clear links so Action Toolbar counts refresh immediately.
-            rec.deposit_line_ids.filtered('vendor_bill_id').write({'vendor_bill_id': False})
+            # Paid deposit bills stay linked: the deposit was really paid, so
+            # Create Deposit Bill must not reappear for those lines.
+            rec.deposit_line_ids.filtered(
+                lambda l: l.vendor_bill_id and l.vendor_bill_id not in paid_deposit_bills
+            ).write({'vendor_bill_id': False})
             rec.settlement_line_ids.write({
                 'refund_bill_id': False,
                 'landed_cost_id': False,
@@ -352,13 +389,22 @@ class ImportContainerDeposit(models.Model):
             if orphan_moves:
                 orphan_moves.write({'container_deposit_id': False})
 
+    # Once the deposit bills are paid, "Set to Draft" from these stages returns
+    # to Waiting Settlement (not Draft): the deposit itself can no longer be
+    # changed, only the settlement needs to be corrected/redone.
+    SETTLEMENT_RESET_STATES = (
+        'waiting_settlement', 'settlement_received', 'waiting_approval',
+        'approved', 'done', 'cancel',
+    )
+
     def action_set_to_draft(self):
         self._check_state_permission(_('set to draft'))
         for rec in self:
-            if rec.state == 'cancel':
-                raise UserError(_('Cancelled documents cannot be set to draft.'))
             rec._cancel_related_accounting_documents()
-            rec.write({'state': 'draft'})
+            if rec.deposit_bills_paid and rec.state in self.SETTLEMENT_RESET_STATES:
+                rec.write({'state': 'waiting_settlement', 'settlement_locked': False})
+            else:
+                rec.write({'state': 'draft', 'settlement_locked': False})
 
     def action_mark_deposit_paid(self):
         self._check_group(self.GROUP_FINANCE, _('mark deposit paid'))
@@ -423,7 +469,12 @@ class ImportContainerDeposit(models.Model):
                         'charge_account_id': charge_account.id if charge_account else False,
                     }))
                 rec.write({'settlement_line_ids': vals})
-            rec.write({'state': 'waiting_settlement'})
+                # First click: open the settlement for input.
+                rec.write({'state': 'waiting_settlement', 'settlement_locked': False})
+            else:
+                # Second click acts as Save: lock the entered amounts.
+                # Only Set to Draft unlocks them again.
+                rec.write({'state': 'waiting_settlement', 'settlement_locked': True})
 
     def action_settlement_received(self):
         self._check_group(self.GROUP_FINANCE, _('mark settlement received'))
@@ -432,7 +483,7 @@ class ImportContainerDeposit(models.Model):
                 raise UserError(_('Please input settlement lines first.'))
             if any(l.refund_amount < 0 or l.charge_amount < 0 for l in rec.settlement_line_ids):
                 raise UserError(_('Refund amount and charge amount cannot be negative.'))
-            rec.write({'state': 'settlement_received'})
+            rec.write({'state': 'settlement_received', 'settlement_locked': True})
 
     def action_request_approval(self):
         self._check_group(self.GROUP_FINANCE, _('request approval'))
@@ -454,21 +505,12 @@ class ImportContainerDeposit(models.Model):
             rec.write({'state': 'done'})
 
     def action_cancel(self):
-        """Return the document to Draft so it can be edited again.
-
-        After the form has been saved (or progressed in the workflow), clicking
-        Cancel resets status to Draft. Related accounting documents that can
-        safely be reversed are cancelled first (same safeguards as Set to Draft).
-        """
         self._check_state_permission(_('cancel'))
         for rec in self:
             if rec.state == 'cancel':
-                # Re-open a previously cancelled document for editing.
-                rec.write({'state': 'draft'})
-                continue
-            if rec.state != 'draft':
-                rec._cancel_related_accounting_documents()
-            rec.write({'state': 'draft'})
+                raise UserError(_('This document is already cancelled.'))
+            rec._cancel_related_accounting_documents()
+            rec.write({'state': 'cancel'})
 
     def action_create_deposit_bill(self):
         self.ensure_one()
@@ -622,10 +664,20 @@ class ImportContainerDeposit(models.Model):
 
     def _open_moves(self, moves, title):
         action = self.env['ir.actions.actions']._for_xml_id('account.action_move_in_invoice_type')
+        # CDM variant of the invoice form: no STTF buttons, single Reset to Draft.
+        form = self.env.ref('container_deposit_management.view_cdm_move_form')
         if len(moves) == 1:
-            action.update({'name': title, 'view_mode': 'form', 'res_id': moves.id, 'views': [(self.env.ref('account.view_move_form').id, 'form')]})
+            action.update({'name': title, 'view_mode': 'form', 'res_id': moves.id, 'views': [(form.id, 'form')]})
         else:
-            action.update({'name': title, 'domain': [('id', 'in', moves.ids)], 'view_mode': 'tree,form'})
+            # Restricted list: no New/Upload/Create Landed Costs, Register
+            # Payment highlighted. Bills must be created from the CDM document.
+            tree = self.env.ref('container_deposit_management.view_cdm_deposit_bill_tree')
+            action.update({
+                'name': title,
+                'domain': [('id', 'in', moves.ids)],
+                'view_mode': 'tree,form',
+                'views': [(tree.id, 'tree'), (form.id, 'form')],
+            })
         return action
 
     def action_view_vendor_bills(self):
@@ -1214,6 +1266,83 @@ class AccountMove(models.Model):
         index=True,
     )
 
+    def _cdm_prepare_move_sequences(self):
+        """Repair journal sequences before posting CDM-linked moves.
+
+        Avoids KeyError: 'rom_month' from od_journal_sequence when the journal
+        sequence prefix still uses %(rom_month)s.
+        """
+        Sequence = self.env['ir.sequence']
+        for move in self:
+            journal = move.journal_id
+            sequences = Sequence.browse()
+            if journal.sequence_id:
+                sequences |= journal.sequence_id
+            refund_seq = getattr(journal, 'refund_sequence_id', False)
+            if refund_seq:
+                sequences |= refund_seq
+            if sequences:
+                sequences._cdm_repair_sequence_placeholders(journal=journal)
+
+    def action_cdm_register_payment(self):
+        """Register Payment from the CDM bills list.
+
+        The restricted CDM list has no separate Post action, so draft bills
+        are posted automatically before opening the standard payment wizard
+        (which only accepts posted entries).
+        """
+        moves = self.filtered(lambda m: m.state != 'cancel')
+        if not moves:
+            raise UserError(_('All selected bills are cancelled; there is nothing to pay.'))
+        vendors = moves.mapped('partner_id.commercial_partner_id')
+        if len(vendors) > 1:
+            raise UserError(_(
+                'The selected bills belong to different vendors:\n%s\n\n'
+                'Payment must be registered per vendor. Please select only '
+                'bills of the same vendor, then click Register Payment.'
+            ) % '\n'.join('- %s' % v.display_name for v in vendors.sorted('display_name')))
+        draft_moves = moves.filtered(lambda m: m.state == 'draft')
+        if draft_moves:
+            draft_moves._cdm_prepare_move_sequences()
+            draft_moves.action_post()
+        return moves.action_register_payment()
+
+    def action_cdm_cancel_deposit_bill(self):
+        """Cancel selected CDM bills/credit notes and restore the CDM document
+        to the point before Create Deposit Bill / Create Refund Credit Note:
+        the moves are cancelled and unlinked from the deposit/settlement lines,
+        so the create buttons become available again."""
+        Deposit = self.env['import.container.deposit']
+        user = self.env.user
+        allowed = (
+            self.env.su
+            or user.has_group(Deposit.GROUP_FINANCE)
+            or user.has_group(Deposit.GROUP_ACCOUNTING)
+            or user.has_group(Deposit.GROUP_ADMIN)
+            or user.has_group('base.group_system')
+        )
+        if not allowed:
+            raise UserError(_(
+                'Only Container Deposit Finance, Accounting or Administrator '
+                'users can cancel deposit bills.'))
+        paid = self.filtered(lambda m: m.payment_state in ('paid', 'in_payment', 'partial'))
+        if paid:
+            raise UserError(_(
+                'The following bills already have payments and cannot be cancelled:\n%s\n\n'
+                'Cancel their payments first.'
+            ) % '\n'.join('- %s' % (m.name if m.name and m.name != '/' else m.display_name) for m in paid))
+        for move in self:
+            if move.state == 'posted':
+                move.button_draft()
+            if move.state != 'cancel':
+                move.button_cancel()
+        deposit_lines = self.env['import.container.deposit.line'].sudo().search([
+            ('vendor_bill_id', 'in', self.ids)])
+        deposit_lines.write({'vendor_bill_id': False})
+        settlement_lines = self.env['import.container.deposit.settlement.line'].sudo().search([
+            ('refund_bill_id', 'in', self.ids)])
+        settlement_lines.write({'refund_bill_id': False})
+
 
 class AccountPaymentRegister(models.TransientModel):
     _inherit = 'account.payment.register'
@@ -1259,8 +1388,102 @@ class AccountPayment(models.Model):
                 payment.move_id.container_deposit_id = deposit_id
         return payments
 
+    def _cdm_unique_payment_move_name(self):
+        """Compute the journal-entry name for a CDM payment from the journal's
+        own entry sequence — the same convention as Vendor Bills
+        (BILL/YYYY/Roman/####): PREFIX/YYYY/Roman/#### continuing the
+        journal's last number, with a uniqueness guard."""
+        self.ensure_one()
+        move = self.move_id
+        journal = move.journal_id
+        sequence = journal.sequence_id
+        if not sequence:
+            return False
+        # Repair #CODE and %(rom_month)s placeholders that break next_by_id()
+        # on this stack (od_journal_sequence KeyError: 'rom_month').
+        sequence._cdm_repair_sequence_placeholders(journal=journal)
+        Move = self.env['account.move'].sudo().with_context(active_test=False)
+        sequence_ctx = sequence.sudo().with_context(ir_sequence_date=move.date)
+        name = sequence_ctx.next_by_id()
+        # Skip numbers already used in this journal (stale sequence counter),
+        # so numbering reconnects with the journal's real last number.
+        while name and Move.search_count([('journal_id', '=', journal.id), ('name', '=', name)]):
+            name = sequence_ctx.next_by_id()
+        return name
+
+    def action_post(self):
+        # Journal-entry numbering for payments is fragile on this database
+        # (od_journal_sequence vs the standard sequence mixin) and raised
+        # "Another entry with the same name already exists". For payments
+        # coming from Container Deposit Management, pre-assign a verified
+        # unique entry name drawn from the journal's own sequence, exactly
+        # like Vendor Bills.
+        for payment in self:
+            move = payment.move_id
+            if payment.container_deposit_id and move and (not move.name or move.name == '/'):
+                name = payment._cdm_unique_payment_move_name()
+                if name:
+                    move.name = name
+        return super().action_post()
+
 
 class StockLandedCost(models.Model):
     _inherit = 'stock.landed.cost'
 
     container_deposit_id = fields.Many2one('import.container.deposit', string='Container Deposit Reference', readonly=True, copy=False)
+    account_move_line_ids = fields.One2many(
+        related='account_move_id.line_ids',
+        string='Journal Items',
+        readonly=True,
+    )
+
+    def compute_landed_cost(self):
+        """Allow Compute on CDM-generated landed costs.
+
+        CDM sets ``custom_declaration_import_id`` so FTM display fields
+        (PO, Vendor, Custom Doc. Number, …) stay linked. ``viin_foreign_trade``
+        then blocks Compute for any LC that has that FTM link, because
+        FTM-generated LCs already carry valuation lines.
+
+        CDM LCs still need Compute to allocate the final deducted charges
+        onto the transfers. Temporarily clear the FTM flags for CDM records
+        only, run the normal Compute chain, then restore the link.
+        """
+        cdm = self.filtered('container_deposit_id')
+        others = self - cdm
+        res = True
+        if others:
+            res = super(StockLandedCost, others).compute_landed_cost()
+        if not cdm:
+            return res
+
+        has_imp = 'custom_declaration_import_id' in cdm._fields
+        has_exp = 'custom_declaration_export_id' in cdm._fields
+        saved_imp = {
+            c.id: c.custom_declaration_import_id.id
+            for c in cdm
+        } if has_imp else {}
+        saved_exp = {
+            c.id: c.custom_declaration_export_id.id
+            for c in cdm
+        } if has_exp else {}
+
+        clear_vals = {}
+        if has_imp:
+            clear_vals['custom_declaration_import_id'] = False
+        if has_exp:
+            clear_vals['custom_declaration_export_id'] = False
+        if clear_vals:
+            cdm.with_context(tracking_disable=True).write(clear_vals)
+        try:
+            res = super(StockLandedCost, cdm).compute_landed_cost()
+        finally:
+            for c in cdm:
+                restore = {}
+                if saved_imp.get(c.id):
+                    restore['custom_declaration_import_id'] = saved_imp[c.id]
+                if saved_exp.get(c.id):
+                    restore['custom_declaration_export_id'] = saved_exp[c.id]
+                if restore:
+                    c.with_context(tracking_disable=True).write(restore)
+        return res

@@ -15,7 +15,7 @@ Core concept:
     'author': 'PT Karunia Jasindo / ChatGPT assisted',
     'website': 'https://karusindo.com',
     'category': 'Inventory/Inventory',
-    'version': '16.0.1.0.32',
+    'version': '16.0.1.0.51',
     'license': 'LGPL-3',
     'depends': [
         'base',
@@ -38,6 +38,11 @@ Core concept:
         'report/container_deposit_report.xml',
         'views/container_deposit_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'container_deposit_management/static/src/scss/cdm_bill_list.scss',
+        ],
+    },
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
     'installable': True,
