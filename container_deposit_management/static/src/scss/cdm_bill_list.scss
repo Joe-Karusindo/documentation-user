@@ -1,0 +1,13 @@
+// Highlight Register Payment in the restricted CDM bills list.
+// Odoo 16 ignores the class attribute on list header buttons (they always
+// render as btn btn-secondary), so restyle the button here instead.
+// button-variant($primary, $primary) is exactly how Bootstrap builds
+// .btn-primary, so the color always matches the theme's highlighted buttons
+// (e.g. Mark Deposit Paid on the form).
+// Scoped to the CDM list only, detected by the presence of our custom
+// Cancel button (action_cdm_cancel_deposit_bill).
+.o_list_buttons:has(button[name="action_cdm_cancel_deposit_bill"]) {
+    button[name="action_cdm_register_payment"] {
+        @include button-variant($primary, $primary);
+    }
+}
