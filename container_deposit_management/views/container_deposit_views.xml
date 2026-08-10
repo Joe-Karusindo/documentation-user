@@ -31,17 +31,19 @@
                          the button that unlocks Refund Amount) and on Approved,
                          plain everywhere else.
                          Hidden on Cancelled (cancelled documents cannot be reopened).
-                         Hidden for full reopen while deposit vendor bills are Paid;
-                         visible again after those bills are Reversed (refund paid).
-                         Settlement unlock (waiting settlement+) stays available. -->
+                         Hidden for full reopen while deposit vendor bills are Paid.
+                         Hidden when deposit vendor bills are Reversed (refund paid).
+                         Settlement unlock (waiting settlement+) stays available while
+                         deposit bills remain Paid. -->
                     <button name="action_set_to_draft" string="Set to Draft" type="object"
-                            attrs="{'invisible': ['|', '|', '|', '|', ('state', '=', 'draft'), ('state', '=', 'approved'), ('state', '=', 'cancel'), '&amp;', ('state', '=', 'waiting_settlement'), ('settlement_locked', '=', True), '&amp;', ('deposit_reopen_blocked', '=', True), ('state', 'not in', ['waiting_settlement', 'settlement_received', 'waiting_approval', 'done'])]}"/>
+                            attrs="{'invisible': ['|', '|', '|', '|', '|', ('state', '=', 'draft'), ('state', '=', 'approved'), ('state', '=', 'cancel'), ('deposit_bills_reversed', '=', True), '&amp;', ('state', '=', 'waiting_settlement'), ('settlement_locked', '=', True), '&amp;', ('deposit_reopen_blocked', '=', True), ('state', 'not in', ['waiting_settlement', 'settlement_received', 'waiting_approval', 'done'])]}"/>
                     <!-- Hidden on Approved once the refund credit notes are paid:
                          the process must then move forward (FTM Landed Cost). -->
                     <button name="action_set_to_draft" string="Set to Draft" type="object" class="oe_highlight"
-                            attrs="{'invisible': ['&amp;', '|', ('state', '!=', 'approved'), ('refund_bills_paid', '=', True), '|', ('state', '!=', 'waiting_settlement'), ('settlement_locked', '=', False)]}"/>
+                            attrs="{'invisible': ['|', ('deposit_bills_reversed', '=', True), '&amp;', '|', ('state', '!=', 'approved'), ('refund_bills_paid', '=', True), '|', ('state', '!=', 'waiting_settlement'), ('settlement_locked', '=', False)]}"/>
                     <field name="all_lines_billed" invisible="1"/>
                     <field name="deposit_bills_paid" invisible="1"/>
+                    <field name="deposit_bills_reversed" invisible="1"/>
                     <field name="deposit_reopen_blocked" invisible="1"/>
                     <field name="settlement_locked" invisible="1"/>
                     <field name="refund_bills_paid" invisible="1"/>
@@ -55,14 +57,15 @@
                     <button name="action_mark_deposit_paid" string="Mark Deposit Paid" type="object" class="oe_highlight"
                             groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
                             attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('all_lines_billed', '=', False)]}"/>
-                    <!-- Settlement: highlighted while input is open (first click / after
-                         Set to Draft); plain once the lines are locked. -->
+                    <!-- Settlement: only while deposit vendor bills remain Paid.
+                         Hidden when bills are Reversed (refund paid) or not fully paid.
+                         Highlighted while input is open; plain once the lines are locked. -->
                     <button name="action_start_settlement" string="Settlement" type="object" class="oe_highlight"
                             groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
-                            attrs="{'invisible': ['|', ('state', 'not in', ['deposit_paid','waiting_settlement']), ('settlement_locked', '=', True)]}"/>
+                            attrs="{'invisible': ['|', '|', '|', ('deposit_bills_reversed', '=', True), ('deposit_bills_paid', '=', False), ('state', 'not in', ['deposit_paid','waiting_settlement']), ('settlement_locked', '=', True)]}"/>
                     <button name="action_start_settlement" string="Settlement" type="object"
                             groups="container_deposit_management.group_container_deposit_finance,container_deposit_management.group_container_deposit_administrator"
-                            attrs="{'invisible': ['|', ('state', '!=', 'waiting_settlement'), ('settlement_locked', '=', False)]}"/>
+                            attrs="{'invisible': ['|', '|', '|', ('deposit_bills_reversed', '=', True), ('deposit_bills_paid', '=', False), ('state', '!=', 'waiting_settlement'), ('settlement_locked', '=', False)]}"/>
                     <!-- Settlement Received: highlighted once the settlement is locked
                          (the next step), plain while input is still open. -->
                     <button name="action_settlement_received" string="Settlement Received" type="object"

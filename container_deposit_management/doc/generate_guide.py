@@ -184,9 +184,10 @@ table(['No', 'Perubahan', 'Keterangan'], [
      'Klik Settlement pertama membuka input Refund Amount. Klik Settlement lagi '
      'mengunci baris (settlement_locked). Hanya Set to Draft yang membuka kunci.'],
     ['17', 'Set to Draft dari tahap settlement',
-     'Jika deposit bill sudah dibayar, Set to Draft dari Waiting Settlement s.d. Done/Cancelled '
+     'Jika deposit bill sudah dibayar, Set to Draft dari Waiting Settlement s.d. Done '
      'mengembalikan ke Waiting Settlement (bukan Draft) agar Refund Amount bisa dikoreksi. '
-     'Tab Deposit tetap terkunci karena bill sudah dibayar.'],
+     'Tab Deposit tetap terkunci karena bill sudah dibayar. Status Cancelled bersifat final '
+     '(tanpa Set to Draft).'],
     ['18', 'Cancel disembunyikan di tahap settlement',
      'Tombol Cancel tidak tampil pada Waiting Settlement s.d. Approved; cukup pakai Set to Draft.'],
     ['19', 'Highlight tombol dinamis',

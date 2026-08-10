@@ -96,6 +96,11 @@ class ImportContainerDeposit(models.Model):
     deposit_bills_paid = fields.Boolean(
         compute='_compute_billing_status',
         help='True when all deposit Vendor Bills are posted and paid/in payment.')
+    deposit_bills_reversed = fields.Boolean(
+        compute='_compute_billing_status',
+        help='True when all deposit Vendor Bills are posted and fully reversed '
+             '(reverse + refund paid). Hides Settlement and Set to Draft; '
+             'Cancel remains available to close the document.')
     deposit_reopen_blocked = fields.Boolean(
         compute='_compute_billing_status',
         help='True when any deposit Vendor Bill is still paid/in payment/'
@@ -124,6 +129,11 @@ class ImportContainerDeposit(models.Model):
             bills = lines.mapped('vendor_bill_id').filtered(lambda m: m.state != 'cancel')
             rec.deposit_bills_paid = bool(bills) and all(
                 m.state == 'posted' and m.payment_state in ('paid', 'in_payment')
+                for m in bills
+            )
+            # Reverse + refund paid → Odoo marks the bill payment_state 'reversed'.
+            rec.deposit_bills_reversed = bool(bills) and all(
+                m.state == 'posted' and m.payment_state == 'reversed'
                 for m in bills
             )
             # Outstanding paid deposit money blocks full reopen / cancel.
@@ -464,6 +474,13 @@ class ImportContainerDeposit(models.Model):
                     'Cancelled documents cannot be set to draft. '
                     'Create a new Container Deposit if needed.'
                 ))
+            if rec.deposit_bills_reversed:
+                raise UserError(_(
+                    'Cannot set to draft %(name)s because the deposit Vendor '
+                    'Bill(s) are already Reversed and the refund is paid.\n'
+                    'Settlement and Set to Draft are not available. Use Cancel '
+                    'to close this document, or create a new Container Deposit.'
+                ) % {'name': rec.display_name})
             # Settlement unlock (paid deposit, waiting settlement+) stays allowed.
             # Full reopen to Draft is blocked while deposit bills are Paid.
             if not rec._is_settlement_unlock_set_to_draft():
@@ -505,6 +522,18 @@ class ImportContainerDeposit(models.Model):
         self._check_group(self.GROUP_FINANCE, _('start settlement'))
         SettlementLine = self.env['import.container.deposit.settlement.line']
         for rec in self:
+            if rec.deposit_bills_reversed:
+                raise UserError(_(
+                    'Cannot start settlement on %(name)s because the deposit '
+                    'Vendor Bill(s) are Reversed and the refund is paid.\n'
+                    'Settlement is only available while deposit bills remain Paid.'
+                ) % {'name': rec.display_name})
+            if not rec.deposit_bills_paid:
+                raise UserError(_(
+                    'Cannot start settlement on %(name)s because the deposit '
+                    'Vendor Bill(s) are not fully paid.\n'
+                    'Post and register payment for all deposit bills first.'
+                ) % {'name': rec.display_name})
             if not rec.settlement_line_ids:
                 vals = []
                 for line in rec.deposit_line_ids.filtered(lambda l: l.line_type == 'deposit'):

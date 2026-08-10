@@ -257,3 +257,10 @@ Version 16.0.1.0.52
 Version 16.0.1.0.53
 -------------------
 - Cancelled documents are final: Set to Draft is hidden on Cancelled status and blocked server-side (cannot reopen a cancelled Container Deposit).
+
+
+Version 16.0.1.0.54
+-------------------
+- When all deposit Vendor Bills are Reversed (refund paid), hide Settlement and Set to Draft on the Container Deposit form.
+- Settlement is only available while deposit bills remain Paid; Cancel stays available after reverse so the document can be closed.
+- Server-side checks mirror the UI for Settlement and Set to Draft when bills are reversed.
