@@ -165,9 +165,9 @@ table(['No', 'Perubahan', 'Keterangan'], [
      'Deposit Account memakai akun 1720002 Uang Muka Jaminan Container dan '
      '1720003 Uang Muka Jaminan Sewa Container (di bawah 1720 Uang Muka Pembelian). '
      'Akun lama 1700002/1700003 tidak digunakan lagi.'],
-    ['12', 'Dokumen Cancelled dapat dibuka kembali',
-     'Tombol Set to Draft tersedia pada status Cancelled sehingga dokumen yang '
-     'terlanjur dibatalkan dapat dikembalikan ke Draft dan diedit ulang.'],
+    ['12', 'Dokumen Cancelled bersifat final',
+     'Tombol Set to Draft disembunyikan pada status Cancelled; dokumen yang '
+     'sudah dibatalkan tidak dapat dibuka kembali. Buat dokumen CDM baru bila diperlukan.'],
     ['13', 'Daftar Bills dari CDM dibatasi',
      'List Vendor Bills / Refunds yang dibuka dari dokumen CDM tidak lagi menampilkan '
      'tombol New, Upload, dan Create Landed Costs. Register Payment di-highlight '
@@ -275,11 +275,11 @@ table(['No', 'Status', 'Kode Teknis', 'Arti Bisnis', 'User Permission'], [
     ['7', 'Waiting Approval', 'waiting_approval', 'Menunggu approval (balance harus 0)', 'Finance (Set to Draft → Waiting Settlement)'],
     ['8', 'Approved', 'approved', 'Disetujui; buat Refund CN & FTM Landed Cost', 'Management (Set to Draft → Waiting Settlement; Cancel disembunyikan)'],
     ['9', 'Done', 'done', 'Mark Posted diklik; dokumen accounting terposting; proses selesai', 'Accounting (Set to Draft → Waiting Settlement bila deposit sudah dibayar)'],
-    ['10', 'Cancelled', 'cancel', 'Dibatalkan; bila deposit sudah dibayar → Set to Draft ke Waiting Settlement', 'User / Finance sesuai konteks'],
+    ['10', 'Cancelled', 'cancel', 'Dibatalkan (final); Set to Draft disembunyikan', '—'],
 ])
 para('Administrator memiliki full permission pada seluruh status di atas.', italic=True)
 para('Catatan: Tombol Cancel disembunyikan pada Waiting Settlement, Settlement Received, Waiting Approval, '
-     'dan Approved. Koreksi settlement memakai Set to Draft.', italic=True)
+     'dan Approved. Koreksi settlement memakai Set to Draft. Status Cancelled bersifat final (tanpa Set to Draft).', italic=True)
 
 # ============ 5 ============
 h1('5. Akses Menu & Penomoran Dokumen')
@@ -584,13 +584,15 @@ table(['Smart Button', 'Muncul Jika', 'Fungsi'], [
 h1('10. Cancel & Set to Draft')
 para('Cancel tersedia pada Draft s.d. Deposit Paid serta Done; disembunyikan pada Waiting Settlement, '
      'Settlement Received, Waiting Approval, dan Approved (koreksi settlement memakai Set to Draft). '
-     'Set to Draft tersedia pada semua status selain Draft (dan hilang di Approved setelah refund paid). '
-     'Jika deposit Vendor Bill masih Paid, tombol Set to Draft (reopen ke Draft) dan Cancel disembunyikan/diblokir.')
+     'Set to Draft tersedia pada semua status selain Draft dan Cancelled (dan hilang di Approved setelah refund paid). '
+     'Jika deposit Vendor Bill masih Paid, tombol Set to Draft (reopen ke Draft) dan Cancel disembunyikan/diblokir. '
+     'Status Cancelled bersifat final: Set to Draft disembunyikan dan diblokir di server.')
 
 h2('10.1 Perilaku Set to Draft setelah deposit dibayar')
-bullet('Dari Waiting Settlement / Settlement Received / Waiting Approval / Approved / Done / Cancelled: '
+bullet('Dari Waiting Settlement / Settlement Received / Waiting Approval / Approved / Done: '
        'status kembali ke Waiting Settlement; kunci settlement dibuka (Refund Amount bisa diedit). '
        'Jalur ini TETAP diizinkan meskipun deposit bill masih Paid.')
+bullet('Dari Cancelled: Set to Draft TIDAK tersedia (dokumen final).')
 bullet('Dari Confirmed / Deposit Paid: reopen penuh ke Draft DIBLOKIR selama deposit Vendor Bill masih '
        'Paid / In Payment / Partial. Blokir dicabut setelah bill di-Reverse dan refund dibayar '
        '(payment status menjadi Reversed), atau payment dibatalkan sehingga bill tidak lagi paid.')
@@ -598,6 +600,7 @@ bullet('Deposit Vendor Bill yang masih paid tidak dibatalkan dan tetap tertaut p
 bullet('Refund Credit Note / journal settlement / Landed Cost draft yang belum dibayar dibatalkan dan dilepas tautannya.')
 
 h2('10.2 Validasi Otomatis')
+bullet('DIBLOKIR jika dokumen sudah Cancelled — Set to Draft tidak diizinkan.')
 bullet('DIBLOKIR jika ada FTM Landed Cost yang sudah divalidasi (state Done) — reverse landed cost terlebih dahulu.')
 bullet('DIBLOKIR jika ada dokumen settlement (Refund CN / journal) yang sudah dibayar — batalkan payment-nya dulu.')
 bullet('DIBLOKIR Set to Draft (ke Draft) / Cancel jika deposit Vendor Bill masih Paid / In Payment / Partial — '

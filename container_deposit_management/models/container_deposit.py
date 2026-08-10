@@ -26,7 +26,7 @@ class ImportContainerDeposit(models.Model):
         'waiting_approval': GROUP_FINANCE,
         'approved': GROUP_MANAGEMENT,
         'done': GROUP_ACCOUNTING,
-        # A cancelled document can be reopened (Set to Draft) by the User group.
+        # Cancelled is final: Set to Draft is not available (button hidden).
         'cancel': GROUP_USER,
     }
 
@@ -453,12 +453,17 @@ class ImportContainerDeposit(models.Model):
     # changed, only the settlement needs to be corrected/redone.
     SETTLEMENT_RESET_STATES = (
         'waiting_settlement', 'settlement_received', 'waiting_approval',
-        'approved', 'done', 'cancel',
+        'approved', 'done',
     )
 
     def action_set_to_draft(self):
         self._check_state_permission(_('set to draft'))
         for rec in self:
+            if rec.state == 'cancel':
+                raise UserError(_(
+                    'Cancelled documents cannot be set to draft. '
+                    'Create a new Container Deposit if needed.'
+                ))
             # Settlement unlock (paid deposit, waiting settlement+) stays allowed.
             # Full reopen to Draft is blocked while deposit bills are Paid.
             if not rec._is_settlement_unlock_set_to_draft():

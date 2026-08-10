@@ -195,7 +195,7 @@ Version 16.0.1.0.31
 
 Version 16.0.1.0.32
 -------------------
-- Cancelled documents can now be reopened: Set to Draft is available on Cancelled status (User group or Administrator), returning the document to Draft where it is editable again.
+- (Superseded by 16.0.1.0.53) Earlier builds allowed Set to Draft on Cancelled; Cancelled is now final.
 
 
 Version 16.0.1.0.33
@@ -252,3 +252,8 @@ Version 16.0.1.0.52
 - The block is lifted after those deposit vendor bills are Reversed and the refund is paid (`payment_state` becomes `reversed`), or the payment is undone so the bill is no longer paid.
 - Settlement unlock via Set to Draft from Waiting Settlement onward remains allowed while the deposit stays paid (returns to Waiting Settlement, does not reopen the deposit).
 - Clear UserError lists the blocking bills; reversed deposit bills are unlinked on full reopen so Create Deposit Bill can run again.
+
+
+Version 16.0.1.0.53
+-------------------
+- Cancelled documents are final: Set to Draft is hidden on Cancelled status and blocked server-side (cannot reopen a cancelled Container Deposit).

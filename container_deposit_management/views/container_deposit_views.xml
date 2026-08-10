@@ -30,11 +30,12 @@
                     <!-- Set to Draft: highlighted while the settlement is locked (it is
                          the button that unlocks Refund Amount) and on Approved,
                          plain everywhere else.
+                         Hidden on Cancelled (cancelled documents cannot be reopened).
                          Hidden for full reopen while deposit vendor bills are Paid;
                          visible again after those bills are Reversed (refund paid).
                          Settlement unlock (waiting settlement+) stays available. -->
                     <button name="action_set_to_draft" string="Set to Draft" type="object"
-                            attrs="{'invisible': ['|', '|', '|', ('state', '=', 'draft'), ('state', '=', 'approved'), '&amp;', ('state', '=', 'waiting_settlement'), ('settlement_locked', '=', True), '&amp;', ('deposit_reopen_blocked', '=', True), ('state', 'not in', ['waiting_settlement', 'settlement_received', 'waiting_approval', 'done', 'cancel'])]}"/>
+                            attrs="{'invisible': ['|', '|', '|', '|', ('state', '=', 'draft'), ('state', '=', 'approved'), ('state', '=', 'cancel'), '&amp;', ('state', '=', 'waiting_settlement'), ('settlement_locked', '=', True), '&amp;', ('deposit_reopen_blocked', '=', True), ('state', 'not in', ['waiting_settlement', 'settlement_received', 'waiting_approval', 'done'])]}"/>
                     <!-- Hidden on Approved once the refund credit notes are paid:
                          the process must then move forward (FTM Landed Cost). -->
                     <button name="action_set_to_draft" string="Set to Draft" type="object" class="oe_highlight"
