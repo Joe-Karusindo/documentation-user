@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Generate Panduan Penggunaan Container Deposit Management v16.0.1.0.49 (.docx)."""
+"""Generate Panduan Penggunaan Container Deposit Management v16.0.1.0.54 (.docx)."""
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+import os
 
-DOC_PATH = '/Users/joe/odoo16/odoo/JASINDO/container_deposit_management/doc/Panduan_Penggunaan_Container_Deposit_Management_v16_1_0_49.docx'
+DOC_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'Panduan_Penggunaan_Container_Deposit_Management_v16_1_0_54.docx',
+)
 
 doc = Document()
 
@@ -66,13 +70,13 @@ def table(headers, rows, widths=None):
 title('PANDUAN PENGGUNAAN', 20)
 title('CUSTOM MODULE ODOO 16', 16)
 title('Import Container Deposit Management', 24)
-title('Versi Modul: 16.0.1.0.50 (panduan file v16_1_0_49)', 13, bold=False)
+title('Versi Modul: 16.0.1.0.54', 13, bold=False)
 doc.add_paragraph()
 title('Technical Name: container_deposit_management', 12, bold=False)
 title('Kategori: Inventory / Inventory', 12, bold=False)
 doc.add_paragraph()
 title('Dokumen Functional Guide — Step-by-Step per Stage', 12, bold=False)
-title('Tanggal: 5 August 2026', 12, bold=False)
+title('Tanggal: 10 August 2026', 12, bold=False)
 p = title('Audience: User Operasional Import, Management, Finance, Accounting, Administrator', 11, bold=False)
 p.runs[0].italic = True
 doc.add_page_break()
@@ -81,7 +85,7 @@ doc.add_page_break()
 h1('Daftar Isi')
 for item in [
     '1. Ringkasan Modul & Konsep Bisnis',
-    '2. Perubahan Penting Hingga Versi 16.0.1.0.50',
+    '2. Perubahan Penting Hingga Versi 16.0.1.0.54',
     '3. Prasyarat Instalasi & Master Data',
     '4. Hak Akses (User Permission)',
     '5. Akses Menu & Penomoran Dokumen',
@@ -129,7 +133,7 @@ bullet('custom_import (stack FTM / custom.declaration.import), ab_foreign_trade,
 bullet('sequence_reset_period, od_journal_sequence (penomoran journal & bulan Romawi)')
 
 # ============ 2 ============
-h1('2. Perubahan Penting Hingga Versi 16.0.1.0.50')
+h1('2. Perubahan Penting Hingga Versi 16.0.1.0.54')
 table(['No', 'Perubahan', 'Keterangan'], [
     ['1', 'Sequence dokumen bulan Romawi',
      'Nomor dokumen: CD/YYYY/RomawiBulan/##### (contoh CD/2026/VII/00001), reset bulanan.'],
@@ -203,6 +207,18 @@ table(['No', 'Perubahan', 'Keterangan'], [
      'Setelah LC di-Validate (ada Journal Entry, mis. JLC/…), form Landed Cost menampilkan '
      'tab Journal Items berisi baris Debit–Credit dari journal accounting tersebut '
      '(Account, Label, Debit, Credit). Tab tersembunyi selama LC masih Draft.'],
+    ['23', 'Fix Register Payment rom_month (v51)',
+     'Sequence journal yang masih memakai %(rom_month)s dinormalisasi ke %(Rmonth)s sebelum Post, '
+     'mencegah KeyError: rom_month saat Register Payment (contoh BILL/2026/VIII/####).'],
+    ['24', 'Blokir Set to Draft / Cancel saat deposit bill Paid (v52)',
+     'Jika deposit Vendor Bill masih Paid / In Payment / Partial: Set to Draft (reopen ke Draft) '
+     'dan Cancel disembunyikan/diblokir di UI dan server.'],
+    ['25', 'Cancelled final — tanpa Set to Draft (v53)',
+     'Pada status Cancelled, Set to Draft disembunyikan dan diblokir. Dokumen cancelled bersifat final.'],
+    ['26', 'Bill Reversed → hide Settlement & Set to Draft (v54)',
+     'Jika SEMUA deposit Vendor Bill berstatus Reversed (reverse + refund paid): tombol Settlement '
+     'dan Set to Draft disembunyikan/diblokir. Settlement hanya tersedia selama bill masih Paid. '
+     'Cancel tetap tersedia untuk menutup dokumen CDM.'],
 ])
 
 # ============ 3 ============
@@ -447,11 +463,16 @@ number('Validasi: Deposit Amount > 0; Vendor Bill deposit harus sudah dibuat; da
        'berstatus Posted serta Paid / In Payment. Jika ada bill yang belum dibayar penuh, sistem '
        'menampilkan daftar bill tersebut dan status tidak berubah.')
 number('Status → Deposit Paid.')
+para('Tombol pada Deposit Paid (v54):', bold=True)
+bullet('Deposit bill masih Paid: Settlement tampil (hijau). Set to Draft dan Cancel disembunyikan/diblokir.')
+bullet('Deposit bill sudah Reversed (refund paid): Settlement dan Set to Draft disembunyikan. Cancel tersedia.')
 para('Jurnal Accounting: tidak ada.', bold=True)
 para('(Hanya mengubah status dokumen CDM; journal sudah terbentuk di Stage 4a.)', italic=True)
 
 h2('Stage 5 — Settlement → Waiting Settlement (Group: Finance)')
 para('Tujuan: Memulai proses settlement setelah container dikembalikan vendor.')
+para('Prasyarat (v54): Settlement hanya diizinkan jika SEMUA deposit Vendor Bill masih Posted & Paid/In Payment. '
+     'Jika bill sudah Reversed, tombol Settlement disembunyikan dan ditolak di server.', italic=True)
 number('Klik Settlement (klik pertama).')
 number('Sistem generate baris settlement dari baris deposit. Landed Cost Product / Charge dan '
        'Charge Account otomatis terisi dari tabel mapping (bab 3.3) dan bersifat read-only.')
@@ -555,12 +576,14 @@ table(['Tombol', 'Terlihat di Status', 'Group', 'Fungsi / Validasi Utama'], [
     ['Submit', 'Draft', 'User', 'Kirim ke Waiting Confirmation; minimal 1 deposit line'],
     ['Print Container Deposit', 'Draft, Waiting Confirmation, Confirmed', 'User', 'Cetak PDF pengajuan ke Management'],
     ['Confirm', 'Waiting Confirmation', 'Management', 'Konfirmasi + sync FTM'],
-    ['Set to Draft', 'Semua kecuali Draft; hilang di Approved setelah refund paid', 'Sesuai owner status',
-     'Jika deposit sudah dibayar & dari tahap settlement+: kembali ke Waiting Settlement + buka kunci. '
-     'Selain itu → Draft. Deposit bill yang sudah dibayar tidak dibatalkan.'],
+    ['Set to Draft', 'Semua kecuali Draft/Cancelled; hilang di Approved setelah refund CN paid; '
+     'hilang jika deposit bill Paid (reopen Draft) atau deposit bill Reversed', 'Sesuai owner status',
+     'Jika deposit masih Paid & dari tahap settlement+: kembali ke Waiting Settlement + buka kunci. '
+     'Diblokir jika Cancelled, jika deposit bill Paid (reopen Draft), atau jika deposit bill Reversed.'],
     ['Create Deposit Bill', 'Confirmed, Deposit Paid (hilang jika semua baris ter-bill)', 'Finance', 'Buat Vendor Bill per vendor (BILL/…)'],
     ['Mark Deposit Paid', 'Confirmed (highlighted setelah semua baris ter-bill)', 'Finance', 'Tandai deposit dibayar; semua bill wajib Posted & Paid/In Payment'],
-    ['Settlement', 'Deposit Paid, Waiting Settlement', 'Finance',
+    ['Settlement', 'Deposit Paid / Waiting Settlement HANYA jika deposit bill masih Paid; '
+     'hilang jika bill Reversed atau belum Paid', 'Finance',
      'Klik-1: generate lines + buka input (hijau). Klik-2: kunci settlement (settlement_locked)'],
     ['Settlement Received', 'Waiting Settlement (hijau saat terkunci)', 'Finance', 'Settlement diterima; amount ≥ 0; mengunci baris'],
     ['Request Approval', 'Settlement Received', 'Finance', 'Ajukan approval; Settlement Balance = 0'],
@@ -568,8 +591,9 @@ table(['Tombol', 'Terlihat di Status', 'Group', 'Fungsi / Validasi Utama'], [
     ['Create Refund Credit Note', 'Approved (hijau; hilang setelah refund paid)', 'Accounting', 'Buat Vendor Credit Note refund (RBILL/…)'],
     ['Create FTM Landed Cost', 'Approved (hijau setelah refund paid; polos sebelumnya)', 'Accounting', 'Buat draft Landed Cost FTM; Compute diizinkan'],
     ['Mark Posted', 'Approved (polos)', 'Accounting', 'Selesaikan dokumen → Done; landed cost wajib jika ada deduction'],
-    ['Cancel', 'Draft s.d. Deposit Paid & Done (disembunyikan di tahap settlement/Approved)', 'Sesuai owner status',
-     'Batalkan dokumen; deposit bill yang sudah dibayar tidak dibatalkan'],
+    ['Cancel', 'Draft s.d. Deposit Paid & Done (disembunyikan di tahap settlement/Approved); '
+     'hilang jika deposit bill masih Paid; tampil lagi setelah bill Reversed', 'Sesuai owner status',
+     'Batalkan dokumen (final). Saat deposit bill Paid: diblokir. Setelah Reversed: tersedia untuk menutup CDM.'],
 ])
 para('Administrator dapat melihat dan mengeksekusi seluruh tombol pada semua status.', italic=True)
 
@@ -585,8 +609,9 @@ table(['Smart Button', 'Muncul Jika', 'Fungsi'], [
 h1('10. Cancel & Set to Draft')
 para('Cancel tersedia pada Draft s.d. Deposit Paid serta Done; disembunyikan pada Waiting Settlement, '
      'Settlement Received, Waiting Approval, dan Approved (koreksi settlement memakai Set to Draft). '
-     'Set to Draft tersedia pada semua status selain Draft dan Cancelled (dan hilang di Approved setelah refund paid). '
+     'Set to Draft tersedia pada status aktif selain Draft dan Cancelled (dan hilang di Approved setelah refund CN paid). '
      'Jika deposit Vendor Bill masih Paid, tombol Set to Draft (reopen ke Draft) dan Cancel disembunyikan/diblokir. '
+     'Jika deposit Vendor Bill sudah Reversed (refund paid), Settlement dan Set to Draft disembunyikan; Cancel tersedia. '
      'Status Cancelled bersifat final: Set to Draft disembunyikan dan diblokir di server.')
 
 h2('10.1 Perilaku Set to Draft setelah deposit dibayar')
@@ -595,8 +620,10 @@ bullet('Dari Waiting Settlement / Settlement Received / Waiting Approval / Appro
        'Jalur ini TETAP diizinkan meskipun deposit bill masih Paid.')
 bullet('Dari Cancelled: Set to Draft TIDAK tersedia (dokumen final).')
 bullet('Dari Confirmed / Deposit Paid: reopen penuh ke Draft DIBLOKIR selama deposit Vendor Bill masih '
-       'Paid / In Payment / Partial. Blokir dicabut setelah bill di-Reverse dan refund dibayar '
-       '(payment status menjadi Reversed), atau payment dibatalkan sehingga bill tidak lagi paid.')
+       'Paid / In Payment / Partial.')
+bullet('Setelah bill di-Reverse dan refund dibayar (payment status Reversed): Settlement dan Set to Draft '
+       'disembunyikan/diblokir; Cancel tersedia untuk menutup dokumen CDM. Buat dokumen CDM baru bila proses '
+       'deposit perlu diulang.')
 bullet('Deposit Vendor Bill yang masih paid tidak dibatalkan dan tetap tertaut pada jalur unlock settlement.')
 bullet('Refund Credit Note / journal settlement / Landed Cost draft yang belum dibayar dibatalkan dan dilepas tautannya.')
 
@@ -604,14 +631,15 @@ h2('10.2 Validasi Otomatis')
 bullet('DIBLOKIR jika dokumen sudah Cancelled — Set to Draft tidak diizinkan.')
 bullet('DIBLOKIR jika ada FTM Landed Cost yang sudah divalidasi (state Done) — reverse landed cost terlebih dahulu.')
 bullet('DIBLOKIR jika ada dokumen settlement (Refund CN / journal) yang sudah dibayar — batalkan payment-nya dulu.')
-bullet('DIBLOKIR Set to Draft (ke Draft) / Cancel jika deposit Vendor Bill masih Paid / In Payment / Partial — '
-       'reverse bill + lunasi refund hingga status Reversed, baru blokir dicabut.')
+bullet('DIBLOKIR Set to Draft (ke Draft) / Cancel jika deposit Vendor Bill masih Paid / In Payment / Partial.')
+bullet('DIBLOKIR Settlement dan Set to Draft jika SEMUA deposit Vendor Bill sudah Reversed (refund paid); '
+       'Cancel tetap diizinkan.')
 
 h2('10.3 Yang Dilakukan Sistem Saat Cancel / Set to Draft')
 number('Dokumen settlement terkait yang belum dibayar di-set draft lalu dibatalkan.')
 number('Landed Cost draft dibatalkan.')
 number('Link refund/landed cost/journal pada settlement dibersihkan; link deposit bill yang masih paid dipertahankan '
-       '(jalur unlock settlement). Deposit bill yang sudah Reversed dilepas tautannya agar Create Deposit Bill bisa diulang.')
+       '(jalur unlock settlement). Deposit bill yang sudah Reversed dilepas tautannya saat Cancel/Set to Draft berhasil.')
 number('Status → Cancelled (Cancel) atau Waiting Settlement / Draft (Set to Draft, tergantung apakah deposit masih paid '
        'dan stage settlement).')
 para('Untuk Stage 4a (Deposit Bill), 9a (Refund Credit Note), dan 9b (FTM Landed Cost) yang sudah membentuk '
@@ -641,16 +669,16 @@ table(['Saat', 'Akun', 'Kode', 'Debit', 'Credit'], [
     ['Payment', 'Bank BCA (atau Kas Besar)', '1102001 / 1101040', '—', '2.775.000'],
 ])
 
-para('Proses wajib sebelum Cancel / Set to Draft CDM diizinkan (Confirmed / Deposit Paid):', bold=True)
+para('Proses wajib sebelum Cancel CDM diizinkan (Confirmed / Deposit Paid) setelah deposit sudah dibayar:', bold=True)
 number('Reverse deposit Vendor Bill dan lunasi refund (atau batalkan / reverse Payment hingga bill tidak lagi Paid).')
-number('Pastikan payment status bill menjadi Reversed (atau unpaid setelah payment dibatalkan) — '
-       'baru tombol Set to Draft / Cancel aktif kembali.')
-number('Jika bill sudah unpaid: Bill → Reset to Draft → Cancel; atau di list Bills CDM pakai tombol Cancel '
-       '(hanya jika belum ada payment).')
-number('Baru Cancel / Set to Draft pada dokumen CDM.')
-para('Catatan CDM: selama deposit Vendor Bill masih Paid / In Payment / Partial, Set to Draft (ke Draft) '
-     'dan Cancel diblokir di UI dan server. Setelah reverse + refund paid (status Reversed), blokir dicabut '
-     'dan tautan bill reversed dilepas agar Create Deposit Bill dapat diulang.', italic=True)
+number('Pastikan payment status bill menjadi Reversed (atau unpaid setelah payment dibatalkan).')
+number('Setelah status bill = Reversed (v54): tombol Settlement dan Set to Draft disembunyikan. '
+       'Tombol Cancel menjadi tersedia untuk menutup dokumen CDM.')
+number('Jika bill sudah unpaid (bukan reversed): Bill → Reset to Draft → Cancel di list Bills CDM '
+       '(hanya jika belum ada payment), lalu Cancel / Set to Draft pada dokumen CDM sesuai status.')
+para('Catatan CDM v54: selama deposit Vendor Bill masih Paid / In Payment / Partial, Set to Draft (ke Draft) '
+     'dan Cancel diblokir. Setelah reverse + refund paid (status Reversed), Settlement & Set to Draft tetap '
+     'disembunyikan; gunakan Cancel untuk menutup CDM, lalu buat dokumen baru bila perlu mengulang proses.', italic=True)
 
 para('Contoh journal saat reverse/cancel Stage 4a:')
 table(['Langkah', 'Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
@@ -712,10 +740,11 @@ table(['Akun', 'Kode', 'Debit', 'Credit', 'Keterangan'], [
 para('Qty stok tidak berubah; yang berubah hanya nilai. Jika ada porsi COGS 5201000, porsi itu juga dibalik.', italic=True)
 
 h2('11.5 Ringkasan: Kapan Bisa Cancel Langsung')
-table(['Stage', 'Kondisi dokumen', 'Cancel / Set to Draft CDM langsung?', 'Yang harus dilakukan dulu'], [
+table(['Stage', 'Kondisi dokumen', 'Cancel / Set to Draft / Settlement CDM?', 'Yang harus dilakukan dulu'], [
     ['4a', 'Bill draft', 'Ya (atau Cancel di list Bills)', '—'],
     ['4a', 'Bill posted, belum bayar', 'Ya / Cancel list Bills', '—'],
-    ['4a', 'Bill paid', 'Diblokir (Set to Draft ke Draft / Cancel)', 'Reverse bill + refund paid (status Reversed) → baru Set to Draft / Cancel'],
+    ['4a', 'Bill paid', 'Set to Draft (ke Draft) & Cancel DIBLOKIR; Settlement BOLEH', 'Lanjut Settlement, atau reverse bill dulu'],
+    ['4a', 'Bill reversed (refund paid)', 'Settlement & Set to Draft DIBLOKIR; Cancel BOLEH', 'Cancel CDM (final) atau buat CDM baru'],
     ['9a', 'CN draft / posted unpaid', 'Ya (Set to Draft)', '—'],
     ['9a', 'CN paid', 'Diblokir', 'Reverse payment refund → Set to Draft'],
     ['9b', 'LC draft', 'Ya', 'CDM batalkan LC draft'],
@@ -839,14 +868,19 @@ table(['Gejala / Error', 'Penyebab Umum', 'Solusi'], [
     ['Another entry with the same name already exists', 'Penomoran journal entry payment bentrok', 'Sudah ditangani: payment CDM memakai sequence journal Bank/Kas. Upgrade CDM + pastikan sequence_reset_period ≥ 15.0.1.0.1'],
     ['This landed cost was generated from custom declaration, so you can not recompute it', 'Blokir Compute dari viin_foreign_trade karena No FTM terisi', 'Upgrade CDM ≥ 16.0.1.0.49 — LC dari CDM boleh di-Compute'],
     ['Refund Amount masih bisa diedit setelah Settlement', 'Belum klik Settlement kedua kali (belum terkunci)', 'Klik Settlement lagi untuk Save/kunci; atau lanjut Settlement Received'],
-    ['KeyError rom_month saat save', 'Modul od_journal_sequence versi lama', 'Upgrade od_journal_sequence ≥ 14.0.4.0.1'],
+    ['KeyError rom_month saat save', 'Modul od_journal_sequence / sequence literal %(rom_month)s',
+     'CDM v51+ menormalisasi ke %(Rmonth)s; upgrade CDM ≥ 16.0.1.0.51'],
+    ['Settlement / Set to Draft hilang di Deposit Paid', 'Deposit bill sudah Reversed (refund paid)',
+     'Sesuai v54: gunakan Cancel untuk menutup CDM, atau buat dokumen baru'],
+    ['Set to Draft / Cancel hilang di Deposit Paid', 'Deposit bill masih Paid / In Payment / Partial',
+     'Lanjut Settlement, atau reverse bill + lunasi refund dulu'],
     ['Partner must have Vendor status', 'Partner bukan vendor', 'Centang Is Vendor pada partner'],
 ])
 
 # ============ 17 ============
 h1('17. Checklist UAT')
 for item in [
-    'Upgrade modul ke 16.0.1.0.49 di DB test; akun 1720002 & 1720003 aktif; sequence_reset_period ≥ 15.0.1.0.1.',
+    'Upgrade modul ke 16.0.1.0.54 di DB test; akun 1720002 & 1720003 aktif; sequence_reset_period ≥ 15.0.1.0.1.',
     'Nomor dokumen baru berformat CD/YYYY/Romawi/##### dan reset tiap bulan.',
     'Lima group (User, Management, Finance, Accounting, Administrator) muncul di Settings → Users.',
     'User tanpa group tidak melihat menu; setiap tombol hanya tampil untuk group-nya.',
@@ -855,8 +889,12 @@ for item in [
     'Confirm hanya bisa oleh Management; Approve hanya oleh Management.',
     'Create Deposit Bill → daftar Bills tanpa New/Upload/Create Landed Cost; Register Payment hijau; multi-vendor diblokir.',
     'Register Payment: draft bill auto-Post; journal entry payment berformat BB/… atau KB/… sesuai journal.',
+    'Register Payment tidak error KeyError rom_month (sequence %(rom_month)s dinormalisasi).',
     'Setelah semua baris ter-bill: Create Deposit Bill hilang; Mark Deposit Paid highlighted.',
     'Mark Deposit Paid ditolak jika ada bill yang belum Posted & Paid/In Payment.',
+    'Deposit Paid + bill Paid: Settlement tampil; Set to Draft & Cancel tersembunyi.',
+    'Deposit Paid + bill Reversed (refund paid): Settlement & Set to Draft tersembunyi; Cancel tampil.',
+    'Cancelled: Set to Draft tersembunyi (dokumen final).',
     'Settlement klik-1: auto-fill product & account; klik-2: kunci Refund Amount; Set to Draft + Settlement Received hijau.',
     'Set to Draft setelah deposit paid: kembali Waiting Settlement (bukan Draft); tab Deposit tetap read-only; Cancel disembunyikan.',
     'Settlement: Final Deduction auto; Request Approval gagal jika balance ≠ 0.',
@@ -885,19 +923,19 @@ para('Selain access rights model, setiap tombol workflow juga dicek di level ser
 h1('Lampiran B — Versi Dokumen')
 table(['Item', 'Nilai'], [
     ['Nama Modul', 'Import Container Deposit Management'],
-    ['Versi yang dianalisis', '16.0.1.0.50 (file panduan tetap v16_1_0_49)'],
-    ['Perubahan utama sejak 16.0.1.0.40',
-     'Settlement lock + highlight dinamis; Set to Draft dari settlement → Waiting Settlement; '
-     'Cancel disembunyikan di tahap settlement; form Bill/CN dari CDM dirapikan (tanpa STTF); '
-     'setelah refund paid → Create FTM Landed Cost hijau; COMPUTE LC dari CDM diizinkan; '
-     'payment Bank/Kas mengikuti sequence journal standar; Bab 11 SOP Cancel Stage 4a/9a/9b; '
-     'tab Journal Items pada Landed Cost setelah Validate (v50)'],
+    ['Versi modul', '16.0.1.0.54'],
+    ['File panduan', 'Panduan_Penggunaan_Container_Deposit_Management_v16_1_0_54.docx'],
+    ['Perubahan utama sejak 16.0.1.0.50',
+     'v51: fix Register Payment KeyError rom_month; '
+     'v52: blokir Set to Draft/Cancel saat deposit bill Paid; '
+     'v53: Cancelled final tanpa Set to Draft; '
+     'v54: bill Reversed → hide Settlement & Set to Draft, Cancel tetap tersedia'],
     ['Format panduan', 'Microsoft Word (.docx)'],
     ['Bahasa', 'Indonesia'],
-    ['Tanggal', '5 August 2026'],
+    ['Tanggal', '10 August 2026'],
 ])
 para('Dokumen ini disusun berdasarkan evaluasi source code modul (models, views, hooks, security, report, '
-     'migrations) hingga versi 16.0.1.0.50. Detail akun Debit/Kredit Landed Cost final dapat berbeda antar '
+     'migrations) hingga versi 16.0.1.0.54. Detail akun Debit/Kredit Landed Cost final dapat berbeda antar '
      'database tergantung konfigurasi COA, product category, dan inventory valuation method. '
      'Bab 11 merujuk contoh akun COA Karusindo untuk SOP Cancel Stage 4a/9a/9b. '
      'Tab Journal Items pada form LC muncul setelah Validate (field Journal Entry terisi).', italic=True)

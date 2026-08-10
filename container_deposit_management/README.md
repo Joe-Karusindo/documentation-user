@@ -264,3 +264,4 @@ Version 16.0.1.0.54
 - When all deposit Vendor Bills are Reversed (refund paid), hide Settlement and Set to Draft on the Container Deposit form.
 - Settlement is only available while deposit bills remain Paid; Cancel stays available after reverse so the document can be closed.
 - Server-side checks mirror the UI for Settlement and Set to Draft when bills are reversed.
+- User manual updated: `doc/Panduan_Penggunaan_Container_Deposit_Management_v16_1_0_54.docx`.
