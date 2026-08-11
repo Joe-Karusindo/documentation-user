@@ -273,5 +273,9 @@ Version 16.0.1.0.56
   an optional `batch_result` so other inherited wizards (e.g.
   `sr_manual_currency_exchange_rate`) can call it in edit mode without
   raising `TypeError: missing 1 required positional argument: batch_result`.
-- Cancel button now reopens the Container Deposit document back to **Draft**
-  (editable) instead of leaving it in Cancelled state.
+
+
+Version 16.0.1.0.57
+-------------------
+- Restore Cancel to its original behaviour: Cancel sets status to **Cancelled**.
+- Reopening for edit remains the job of **Set to Draft** (not Cancel).

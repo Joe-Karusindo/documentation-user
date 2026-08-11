@@ -15,7 +15,7 @@ Core concept:
     'author': 'PT Karunia Jasindo / ChatGPT assisted',
     'website': 'https://karusindo.com',
     'category': 'Inventory/Inventory',
-    'version': '16.0.1.0.56',
+    'version': '16.0.1.0.57',
     'license': 'LGPL-3',
     'depends': [
         'base',

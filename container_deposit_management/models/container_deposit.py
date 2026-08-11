@@ -607,14 +607,11 @@ class ImportContainerDeposit(models.Model):
         self._check_state_permission(_('cancel'))
         for rec in self:
             if rec.state == 'cancel':
-                # Allow reopening for editing after a previous Cancel.
-                rec.write({'state': 'draft', 'settlement_locked': False})
-                continue
+                raise UserError(_('This document is already cancelled.'))
             # Paid deposit bills block Cancel until reversed + refund paid.
             rec._check_deposit_reopen_allowed(_('cancel'))
             rec._cancel_related_accounting_documents()
-            # Cancel should reopen the document for editing.
-            rec.write({'state': 'draft', 'settlement_locked': False})
+            rec.write({'state': 'cancel'})
 
     def action_create_deposit_bill(self):
         self.ensure_one()
