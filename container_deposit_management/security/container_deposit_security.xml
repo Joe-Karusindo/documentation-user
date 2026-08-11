@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="module_category_container_deposit" model="ir.module.category">
+            <field name="name">Container Deposit Management</field>
+            <field name="description">Access rights for Container Deposit Management workflow</field>
+            <field name="sequence">25</field>
+        </record>
+
+        <!-- 1-2 Draft &amp; Waiting Confirmation -->
+        <record id="group_container_deposit_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_category_container_deposit"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- 3 Confirmed &amp; 8 Approved -->
+        <record id="group_container_deposit_management" model="res.groups">
+            <field name="name">Management</field>
+            <field name="category_id" ref="module_category_container_deposit"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- 4-7 Deposit Paid through Waiting Approval -->
+        <record id="group_container_deposit_finance" model="res.groups">
+            <field name="name">Finance</field>
+            <field name="category_id" ref="module_category_container_deposit"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- 9-10 Posted &amp; Done (Refund CN, FTM Landed Cost) -->
+        <record id="group_container_deposit_accounting" model="res.groups">
+            <field name="name">Accounting</field>
+            <field name="category_id" ref="module_category_container_deposit"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Full permission on all workflow stages -->
+        <record id="group_container_deposit_administrator" model="res.groups">
+            <field name="name">Administrator</field>
+            <field name="category_id" ref="module_category_container_deposit"/>
+            <field name="implied_ids" eval="[
+                (4, ref('group_container_deposit_user')),
+                (4, ref('group_container_deposit_management')),
+                (4, ref('group_container_deposit_finance')),
+                (4, ref('group_container_deposit_accounting')),
+            ]"/>
+        </record>
+    </data>
+</odoo>
