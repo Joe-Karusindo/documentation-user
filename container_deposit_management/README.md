@@ -279,3 +279,13 @@ Version 16.0.1.0.57
 -------------------
 - Restore Cancel to its original behaviour: Cancel sets status to **Cancelled**.
 - Reopening for edit remains the job of **Set to Draft** (not Cancel).
+
+
+Version 16.0.1.0.58
+-------------------
+- On Validate of a CDM FTM Landed Cost, post a companion clearing journal entry:
+  Debit Charge Account (e.g. 6130006 Biaya Sewa Container) /
+  Credit Deposit Account (1720002 / 1720003 Uang Muka Jaminan...).
+- Linked on settlement lines via Journal Entry so after Refund CN + Final
+  Deduction the deposit asset account closes to zero.
+- Create FTM Landed Cost still only creates the draft LC; clearing posts on Validate.

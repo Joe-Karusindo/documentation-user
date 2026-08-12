@@ -1572,3 +1572,109 @@ class StockLandedCost(models.Model):
                 if restore:
                     c.with_context(tracking_disable=True).write(restore)
         return res
+
+    def button_validate(self):
+        """After LC validate, clear the deposit asset for Final Deduction.
+
+        Standard landed-cost validation moves cost into stock and credits the
+        Charge Account (e.g. 6130006). CDM still holds that amount on the
+        deposit asset (1720002 / 1720003) until a companion clearing entry is
+        posted:
+
+            Dr Charge Account (6130006)
+            Cr Deposit Account (1720003)
+
+        so the deposit account closes after Refund CN + Final Deduction.
+        """
+        res = super().button_validate()
+        self.filtered('container_deposit_id')._cdm_post_deposit_clearing_entries()
+        return res
+
+    def _cdm_settlement_lines_for_clearing(self):
+        """Settlement lines of this LC that still need a deposit clearing JE."""
+        self.ensure_one()
+        deposit = self.container_deposit_id
+        if not deposit:
+            return self.env['import.container.deposit.settlement.line']
+        return deposit.settlement_line_ids.filtered(
+            lambda l: l.landed_cost_id == self
+            and l.charge_amount > 0
+            and not l.journal_entry_id
+        )
+
+    def _cdm_post_deposit_clearing_entries(self):
+        """Post Dr Charge Account / Cr Deposit Account for Final Deduction."""
+        AccountMove = self.env['account.move']
+        for cost in self:
+            if cost.state != 'done' or not cost.container_deposit_id:
+                continue
+            lines = cost._cdm_settlement_lines_for_clearing()
+            if not lines:
+                continue
+
+            deposit = cost.container_deposit_id
+            journal = deposit.landed_cost_journal_id or cost.account_journal_id
+            if not journal:
+                raise UserError(_(
+                    'Please set Landed Cost Journal on %(name)s before validating '
+                    'the FTM Landed Cost (needed to clear the deposit account).'
+                ) % {'name': deposit.display_name})
+
+            move_lines = []
+            for line in lines:
+                amount = line.charge_amount
+                if not amount:
+                    continue
+                charge_account = line.charge_account_id
+                if not charge_account:
+                    raise UserError(_(
+                        'Settlement line "%(line)s" has Final Deduction %(amount)s '
+                        'but no Charge Account. Set Charge Account (e.g. 6130006) '
+                        'before validating the FTM Landed Cost.'
+                    ) % {
+                        'line': line.name or line.display_name,
+                        'amount': amount,
+                    })
+                deposit_account = line.source_deposit_line_id.account_id
+                if not deposit_account:
+                    raise UserError(_(
+                        'Settlement line "%(line)s" has no Deposit Account on the '
+                        'source deposit line. Set account 1720002/1720003 before '
+                        'validating the FTM Landed Cost.'
+                    ) % {'line': line.name or line.display_name})
+                label = _('CDM deposit clearing - %(deposit)s - %(line)s') % {
+                    'deposit': deposit.name,
+                    'line': line.name or line.product_id.display_name or line.id,
+                }
+                partner = line.container_vendor_id
+                move_lines.extend([
+                    (0, 0, {
+                        'name': label,
+                        'account_id': charge_account.id,
+                        'partner_id': partner.id if partner else False,
+                        'debit': amount,
+                        'credit': 0.0,
+                    }),
+                    (0, 0, {
+                        'name': label,
+                        'account_id': deposit_account.id,
+                        'partner_id': partner.id if partner else False,
+                        'debit': 0.0,
+                        'credit': amount,
+                    }),
+                ])
+
+            if not move_lines:
+                continue
+
+            move = AccountMove.create({
+                'move_type': 'entry',
+                'name': '/',
+                'date': cost.date or fields.Date.context_today(cost),
+                'ref': _('CDM deposit clearing - %s') % deposit.name,
+                'journal_id': journal.id,
+                'container_deposit_id': deposit.id,
+                'line_ids': move_lines,
+            })
+            move.action_post()
+            lines.write({'journal_entry_id': move.id})
