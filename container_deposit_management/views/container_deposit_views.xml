@@ -281,6 +281,14 @@
         <field name="arch" type="xml">
             <xpath expr="//sheet" position="inside">
                 <field name="container_deposit_id" invisible="1"/>
+                <field name="cdm_deposit_clearing_needed" invisible="1"/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_cdm_post_deposit_clearing"
+                        string="Post Deposit Clearing"
+                        type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('cdm_deposit_clearing_needed', '=', False)]}"/>
             </xpath>
             <xpath expr="//page[field[@name='invoice_to_check']]" position="attributes">
                 <attribute name="attrs">{'invisible': [('container_deposit_id', '!=', False)]}</attribute>

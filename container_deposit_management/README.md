@@ -289,3 +289,5 @@ Version 16.0.1.0.58
 - Linked on settlement lines via Journal Entry so after Refund CN + Final
   Deduction the deposit asset account closes to zero.
 - Create FTM Landed Cost still only creates the draft LC; clearing posts on Validate.
+- For already-validated CDM Landed Costs, a **Post Deposit Clearing** button appears
+  until the clearing entry exists (useful for documents validated before this fix).

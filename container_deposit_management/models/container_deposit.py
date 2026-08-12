@@ -1521,6 +1521,38 @@ class StockLandedCost(models.Model):
         string='Journal Items',
         readonly=True,
     )
+    cdm_deposit_clearing_needed = fields.Boolean(
+        compute='_compute_cdm_deposit_clearing_needed',
+        help='True when this CDM landed cost is validated but Final Deduction '
+             'has not yet cleared the deposit asset account.',
+    )
+
+    @api.depends(
+        'container_deposit_id',
+        'state',
+        'container_deposit_id.settlement_line_ids.landed_cost_id',
+        'container_deposit_id.settlement_line_ids.charge_amount',
+        'container_deposit_id.settlement_line_ids.journal_entry_id',
+    )
+    def _compute_cdm_deposit_clearing_needed(self):
+        for cost in self:
+            if cost.state != 'done' or not cost.container_deposit_id:
+                cost.cdm_deposit_clearing_needed = False
+            else:
+                cost.cdm_deposit_clearing_needed = bool(cost._cdm_settlement_lines_for_clearing())
+
+    def action_cdm_post_deposit_clearing(self):
+        """Manual action for already-validated CDM LCs missing the clearing JE."""
+        for cost in self:
+            if not cost.container_deposit_id:
+                raise UserError(_('This Landed Cost is not linked to a Container Deposit.'))
+            if cost.state != 'done':
+                raise UserError(_(
+                    'Validate the FTM Landed Cost first. Deposit clearing is posted '
+                    'automatically on Validate, or use this action afterwards.'
+                ))
+        self._cdm_post_deposit_clearing_entries()
+        return True
 
     def compute_landed_cost(self):
         """Allow Compute on CDM-generated landed costs.
