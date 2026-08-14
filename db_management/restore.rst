@@ -154,14 +154,19 @@ Use this when the filestore is missing and you cannot copy it, or when the
 filestore is present but the cached bundles still point at old checksums.
 
 The login form still submits, but the backend JavaScript may be too broken to use
-**Regenerate Assets Bundles** from the debug menu. Delete the bundle attachments
-from PostgreSQL instead:
+**Regenerate Assets Bundles** from the debug menu. Delete the cached bundles,
+then restart Odoo.
+
+Do **not** paste SQL into the Odoo shell (the ``>>>`` prompt). SQL belongs in
+``psql``. If you are already in the Odoo shell, use the Python block below.
+
+In PostgreSQL:
 
 .. code-block:: bash
 
-   sudo -u postgres psql <database_name>
+   psql <database_name>
 
-On macOS, connect as your system user instead: ``psql <database_name>``.
+On Linux packages you may need ``sudo -u postgres psql <database_name>``.
 
 .. code-block:: sql
 
@@ -169,26 +174,21 @@ On macOS, connect as your system user instead: ``psql <database_name>``.
     WHERE res_model = 'ir.ui.view'
       AND name LIKE '%assets_%';
 
-Restart the Odoo service, then reload :file:`/web/login` without using the
-browser cache. The first load is slower: Odoo compiles the bundles again and
-writes them to the filestore.
-
-From an Odoo shell the same cleanup is:
-
-.. code-block:: bash
-
-   ./odoo-bin shell -d <database_name>
-
-Add ``-c /path/to/odoo.conf`` when the server is started with a configuration
-file.
+In an Odoo shell (``>>>``), paste this instead:
 
 .. code-block:: python
 
+   exec("""
    env['ir.attachment'].search([
        ('res_model', '=', 'ir.ui.view'),
        ('name', 'like', 'assets_'),
    ]).unlink()
    env.cr.commit()
+   """)
+
+Then ``exit()`` the shell, restart Odoo, and hard refresh the browser. The first
+load is slower: Odoo compiles the bundles again and writes them to the
+filestore.
 
 Clear a broken website logo
 ---------------------------
@@ -323,8 +323,21 @@ attachments in the filestore. Regenerating CSS does not rebuild those icons.
       print('updated', len(menus), 'menus')
       """)
 
-#. Delete the cached asset bundles again (see above), restart Odoo, and hard
-   refresh the browser.
+#. Still in the Odoo shell (``>>>``), delete the cached asset bundles. Do not
+   paste SQL here:
+
+   .. code-block:: python
+
+      exec("""
+      env['ir.attachment'].search([
+          ('res_model', '=', 'ir.ui.view'),
+          ('name', 'like', 'assets_'),
+      ]).unlink()
+      env.cr.commit()
+      print('asset bundles deleted')
+      """)
+
+   Then ``exit()``, restart Odoo, and hard refresh the browser.
 
 Company-specific theme images (backend logo, apps-menu background) live in the
 filestore. If those files are gone, the theme falls back to defaults until you
