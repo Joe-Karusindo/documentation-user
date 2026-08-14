@@ -307,16 +307,21 @@ attachments in the filestore. Regenerating CSS does not rebuild those icons.
       ./odoo-bin -d <database_name> -u muk_web_theme --stop-after-init
 
 #. Rebuild menu icons from each module's :file:`static/description/icon.png`
-   (this does not need the original filestore). In an Odoo shell:
+   (this does not need the original filestore). In an Odoo shell, paste **one**
+   block. The interactive ``>>>`` prompt needs a blank line to end a ``for``
+   loop before ``env.cr.commit()``; wrapping the script avoids that:
 
    .. code-block:: python
 
+      exec("""
       menus = env['ir.ui.menu'].search([('web_icon', '!=', False)])
       for menu in menus:
           data = menu._compute_web_icon_data(menu.web_icon)
           if data:
               menu.write({'web_icon_data': data})
       env.cr.commit()
+      print('updated', len(menus), 'menus')
+      """)
 
 #. Delete the cached asset bundles again (see above), restart Odoo, and hard
    refresh the browser.
