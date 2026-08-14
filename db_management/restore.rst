@@ -265,11 +265,80 @@ are repaired:
 * **Workers** — if ``workers`` is greater than ``0``, restart the whole
   service so every process drops the old in-memory cache.
 
+.. _restore-backend-theme:
+
+Backend theme and app icons
+---------------------------
+
+After the default backend loads, a third-party web theme can still look wrong:
+identical generic app icons in the sidebar, stock grey/green colors, and no
+theme logo or apps-menu background. That is common with a backend theme such as
+**MuK Web Theme** (``muk_web_theme``).
+
+The theme's JavaScript (the left apps bar) can load while **icons** and
+**compiled theme SCSS** do not. Menu icons are stored as ``web_icon_data``
+attachments in the filestore. Regenerating CSS does not rebuild those icons.
+
+#. Confirm the **same major version** of the theme is on ``addons_path`` (MuK
+   16.0 with Odoo 16, for example):
+
+   .. code-block:: bash
+
+      find "$HOME" -type d -name 'muk_web_theme' 2>/dev/null
+
+   The folder must appear in the ``addons_path`` used to start Odoo. Restart
+   after changing ``addons_path``.
+
+#. Check that the module is installed:
+
+   .. code-block:: sql
+
+      SELECT name, state FROM ir_module_module
+       WHERE name LIKE 'muk%';
+
+   ``state`` must be ``installed``. If the row is missing or ``uninstalled``,
+   add the addon path, update the apps list, and install the theme.
+
+#. Upgrade the theme so its SCSS is compiled into ``web.assets_backend``.
+   Use the same ``-c`` configuration file as the running server:
+
+   .. code-block:: bash
+
+      ./odoo-bin -d <database_name> -u muk_web_theme --stop-after-init
+
+#. Rebuild menu icons from each module's :file:`static/description/icon.png`
+   (this does not need the original filestore). In an Odoo shell:
+
+   .. code-block:: python
+
+      menus = env['ir.ui.menu'].search([('web_icon', '!=', False)])
+      for menu in menus:
+          data = menu._compute_web_icon_data(menu.web_icon)
+          if data:
+              menu.write({'web_icon_data': data})
+      env.cr.commit()
+
+#. Delete the cached asset bundles again (see above), restart Odoo, and hard
+   refresh the browser.
+
+Company-specific theme images (backend logo, apps-menu background) live in the
+filestore. If those files are gone, the theme falls back to defaults until you
+copy the filestore or re-upload the images in the theme settings.
+
+.. warning::
+   If you regenerated assets **before** the theme folder was on
+   ``addons_path``, the bundles were compiled without the theme. Upgrade the
+   module and regenerate assets again after the path is correct.
+
+   A log line such as ``Could not get content for /muk_web_theme/static/...``
+   means Odoo still cannot read the theme files.
+
 Prevent the issue
 =================
 
 * Download **zip (includes filestore)** from the database manager, not a raw SQL
   dump, unless you also archive :file:`filestore/<database_name>` yourself.
-* Restore with the **same major version** and the **same extra modules**.
+* Restore with the **same major version** and the **same extra modules**,
+  including any backend theme, **before** the first asset regeneration.
 * After a restore, open :file:`/web/login` once and confirm that the layout, the
   website logo, and the backend theme load before you point users at the copy.
