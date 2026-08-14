@@ -72,13 +72,32 @@ Confirm the symptom
 -------------------
 
 #. Open the login page, then open the browser developer tools (``F12``) and reload.
-   Failed requests to :file:`/web/content/...css` or :file:`/web/content/...js`
-   (404 or 500) confirm missing or unreadable asset files.
+   Failed requests to :file:`/web/content/...css`, :file:`/web/content/...js`, or
+   :file:`/web/image/website/1/logo/...` (404 or 500) confirm missing files.
 #. Append ``?debug=assets`` to the URL (for example
    ``http://localhost:8069/web/login?debug=assets``). If the interface suddenly
    looks correct, the source addons are fine and only the **cached bundles** are
    broken.
-#. Check the Odoo server log for ``FileNotFoundError`` under ``filestore``.
+#. Check the Odoo server log. A missing filestore file looks like this:
+
+   .. code-block:: text
+
+      FileNotFoundError: [Errno 2] No such file or directory:
+      '.../filestore/<database_name>/f4/f4df3e6c...'
+      GET /web/image/website/1/logo/My%20Website ... 500
+
+   The hash after ``filestore/<database_name>/`` is the attachment's
+   ``store_fname``. Odoo still has the ``ir.attachment`` row; the file on disk
+   is gone. The *Powered by Odoo* footer image can still load, because that
+   file comes from the addon source, not from the filestore.
+
+   If the hashed file exists somewhere else on the machine (another
+   ``data_dir``, an unzipped backup), copy that whole ``filestore`` directory
+   into the path from the log:
+
+   .. code-block:: bash
+
+      find "$HOME" -name 'f4df3e6ca8f978a524d655084dfeede1578b845c' 2>/dev/null
 
 .. tip::
    ``?debug=assets`` is a diagnostic. After the filestore or the bundles are
@@ -92,18 +111,31 @@ Restore the filestore
 
 The filestore directory name **must match the database name**. Typical locations:
 
+* macOS source install: :file:`~/Library/Application Support/Odoo/filestore/<database_name>`
+* Linux source install: :file:`~/.local/share/Odoo/filestore/<database_name>`
 * Packaged Linux install: :file:`/var/lib/odoo/filestore/<database_name>`
-* Source install: :file:`~/.local/share/Odoo/filestore/<database_name>`
 * Custom path: the ``data_dir`` value in the Odoo configuration file, plus
   :file:`filestore/<database_name>`
+
+The log line already prints the full path Odoo expects. If that folder exists but
+the hashed file inside it does not, the restore was a dump **without** the
+matching filestore (or the zip was extracted to a different ``data_dir``).
 
 If the original filestore still exists (on the old server, in a zip, or next to a
 manual dump):
 
 #. Stop Odoo.
-#. Copy the directory into the location above, using the **new** database name if
-   you renamed the database during restore.
-#. Give ownership to the user that runs Odoo, for example:
+#. From a backup zip, the files sit under :file:`filestore/` next to
+   :file:`dump.sql`. Copy them into the location above, using the **new**
+   database name if you renamed the database during restore:
+
+   .. code-block:: bash
+
+      unzip backup.zip -d /tmp/odoo-restore
+      cp -R /tmp/odoo-restore/filestore/* \
+        "<filestore_path>/<database_name>/"
+
+#. Give ownership to the user that runs Odoo (Linux packages):
 
    .. code-block:: bash
 
@@ -129,6 +161,8 @@ from PostgreSQL instead:
 
    sudo -u postgres psql <database_name>
 
+On macOS, connect as your system user instead: ``psql <database_name>``.
+
 .. code-block:: sql
 
    DELETE FROM ir_attachment
@@ -143,7 +177,10 @@ From an Odoo shell the same cleanup is:
 
 .. code-block:: bash
 
-   ./odoo-bin shell -c /etc/odoo/odoo.conf -d <database_name>
+   ./odoo-bin shell -d <database_name>
+
+Add ``-c /path/to/odoo.conf`` when the server is started with a configuration
+file.
 
 .. code-block:: python
 
@@ -153,9 +190,57 @@ From an Odoo shell the same cleanup is:
    ]).unlink()
    env.cr.commit()
 
+Clear a broken website logo
+---------------------------
+
+A ``GET /web/image/website/1/logo/... 500`` with ``FileNotFoundError`` means the
+**Website** logo attachment points at a missing file. That is the broken image
+next to the website name on the login page. It is **not** the CSS; fix the
+bundles as above for the unstyled layout.
+
+If you cannot copy the original filestore, drop the broken pointer so Odoo
+falls back to the default logo. You can re-upload the logo later under
+:menuselection:`Website --> Configuration --> Settings`.
+
+Match the hash from the log (the part after ``filestore/<database_name>/``):
+
+.. code-block:: sql
+
+   DELETE FROM ir_attachment
+    WHERE store_fname = 'f4/f4df3e6ca8f978a524d655084dfeede1578b845c';
+
+To drop every website logo pointer (when several companies or websites exist):
+
+.. code-block:: sql
+
+   DELETE FROM ir_attachment
+    WHERE res_model = 'website'
+      AND res_field = 'logo';
+
+To list **all** attachments whose files are missing from disk, use an Odoo
+shell. Unlink only the rows you intend to drop (assets regenerate; logos and
+images do not).
+
+.. code-block:: python
+
+   import os
+   from odoo.tools import config
+
+   filestore = config.filestore(env.cr.dbname)
+   missing = env['ir.attachment'].search([
+       ('store_fname', '!=', False),
+   ]).filtered(
+       lambda rec: not os.path.isfile(
+           os.path.join(filestore, rec.store_fname)
+       )
+   )
+   for rec in missing:
+       print(rec.id, rec.res_model, rec.res_field, rec.name, rec.store_fname)
+
 .. warning::
    Do not ``DELETE FROM ir_attachment`` without a filter. That removes every
-   attachment in the database, not only the cached CSS/JS bundles.
+   attachment in the database, not only the cached CSS/JS bundles or one
+   missing logo.
 
 Other checks
 ------------
@@ -166,8 +251,9 @@ are repaired:
 * **Permissions** — the Odoo process must be able to read and write the
   filestore. A restore run as ``root`` often leaves files that the ``odoo``
   service user cannot open.
-* **Missing compiler** — Odoo 14 compiles SCSS with the Python ``libsass``
-  package. If it is missing, install it in the Odoo environment and restart:
+* **Missing compiler** — Odoo 11 and later compile SCSS with the Python
+  ``libsass`` package. If it is missing, install it in the Odoo environment
+  and restart:
 
   .. code-block:: bash
 
