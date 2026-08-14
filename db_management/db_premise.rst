@@ -178,3 +178,9 @@ other record by clicking on it and using the edit button.
 
 .. image:: media/db_uuid.png
     :align: center
+
+Restore a database
+==================
+
+To restore a backup, including what to do when the login page or website comes back
+**without CSS** (plain HTML, broken logo, unstyled form), see :doc:`restore`.
