@@ -824,33 +824,63 @@ class ImportContainerDepositLine(models.Model):
             'codes': ('1720003',),
             'product_tokens': (
                 'uang muka jaminan sewa container',
+                'uang muka jaminan sewa kontainer',
             ),
             'account_names': (
                 'uang muka jaminan sewa container',
+                'uang muka jaminan sewa kontainer',
             ),
         },
         {
             'codes': ('1720002',),
             'product_tokens': (
                 'uang muka jaminan container',
+                'uang muka jaminan kontainer',
             ),
             'account_names': (
                 'uang muka jaminan container',
+                'uang muka jaminan kontainer',
             ),
         },
     )
     APPROVED_DEPOSIT_PRODUCT_NAMES = (
         'Uang Muka Jaminan Container',
         'Uang Muka Jaminan Sewa Container',
+        'Uang Muka Jaminan Kontainer',
+        'Uang Muka Jaminan Sewa Kontainer',
     )
     APPROVED_DEPOSIT_ACCOUNT_CODES = ('1720002', '1720003')
 
     @api.model
+    def _deposit_product_match_text(self, product):
+        """Build a casefold search string from product name(s) and default code."""
+        product = product or self.env['product.product']
+        if not product:
+            return ''
+        parts = []
+        for lang in (self.env.context.get('lang'), 'en_US', 'id_ID'):
+            if not lang:
+                continue
+            name = product.with_context(lang=lang).name
+            if name:
+                parts.append(name.strip().casefold())
+        if product.name:
+            parts.append((product.name or '').strip().casefold())
+        default_code = (product.default_code or '').strip().casefold()
+        return f'{default_code} {" ".join(dict.fromkeys(parts))}'
+
+    @api.model
     def _is_approved_deposit_product(self, product):
-        """Exact approved product name match (ORM-safe with translated names)."""
+        """Approved deposit product (Container/Kontainer spelling, any locale)."""
         if not product:
             return False
-        return (product.name or '').strip() in self.APPROVED_DEPOSIT_PRODUCT_NAMES
+        if (product.name or '').strip() in self.APPROVED_DEPOSIT_PRODUCT_NAMES:
+            return True
+        combined = self._deposit_product_match_text(product)
+        return any(
+            any(token in combined for token in mapping['product_tokens'])
+            for mapping in self.DEPOSIT_PRODUCT_ACCOUNT_MAP
+        )
 
     @api.model
     def _get_approved_deposit_product_ids(self):
@@ -950,14 +980,15 @@ class ImportContainerDepositLine(models.Model):
         product = product or self.env['product.product']
         product_name = (product.name or '').strip()
         if product_name == 'Uang Muka Jaminan Sewa Container':
-            return ('1720003',), ('uang muka jaminan sewa container',)
+            return ('1720003',), ('uang muka jaminan sewa container', 'uang muka jaminan sewa kontainer')
+        if product_name == 'Uang Muka Jaminan Sewa Kontainer':
+            return ('1720003',), ('uang muka jaminan sewa kontainer', 'uang muka jaminan sewa container')
         if product_name == 'Uang Muka Jaminan Container':
-            return ('1720002',), ('uang muka jaminan container',)
+            return ('1720002',), ('uang muka jaminan container', 'uang muka jaminan kontainer')
+        if product_name == 'Uang Muka Jaminan Kontainer':
+            return ('1720002',), ('uang muka jaminan kontainer', 'uang muka jaminan container')
 
-        # Legacy fallback for minor spelling variants in imported master data.
-        product_name_cf = product_name.casefold()
-        default_code = (product.default_code or '').strip().casefold()
-        combined = f'{default_code} {product_name_cf}'
+        combined = self._deposit_product_match_text(product)
         for mapping in self.DEPOSIT_PRODUCT_ACCOUNT_MAP:
             if any(token in combined for token in mapping['product_tokens']):
                 return mapping['codes'], mapping['account_names']
@@ -1107,7 +1138,8 @@ class ImportContainerDepositLine(models.Model):
             if line.product_id and not self._is_approved_deposit_product(line.product_id):
                 raise ValidationError(_(
                     'Product / Charge must be either "Uang Muka Jaminan Container" '
-                    'or "Uang Muka Jaminan Sewa Container".'
+                    'or "Uang Muka Jaminan Sewa Container" '
+                    '(Container/Kontainer spelling accepted).'
                 ))
 
     @api.constrains('account_id')

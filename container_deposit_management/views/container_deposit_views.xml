@@ -157,7 +157,7 @@
                                     <field name="vendor_id" domain="[('is_vendor', '=', True), ('active', '=', True)]" options="{'no_create': True, 'no_create_edit': True}" optional="show"/>
                                     <field name="amount" widget="float"/>
                                     <field name="tax_ids" widget="many2many_tags" optional="show"/>
-                                    <field name="account_id" readonly="1" force_save="1" options="{'no_create': True, 'no_create_edit': True}" optional="hide"/>
+                                    <field name="account_id" readonly="1" force_save="1" options="{'no_create': True, 'no_create_edit': True}" optional="show"/>
                                     <field name="vendor_bill_id" readonly="1" options="{'no_create': True}" optional="hide"/>
                                     <field name="note" readonly="1" optional="hide"/>
                                 </tree>
