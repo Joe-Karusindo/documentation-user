@@ -10,8 +10,9 @@ A custom-format dump (``.dump``) and a filestore zip are two halves of the same
 backup. The dump holds the records; the filestore zip holds uploaded files and
 compiled assets.
 
-This page explains a common failure of a wrapper script that writes the dump to a
-``.tmp`` file and then renames it.
+The Mac Mini wrapper ``/Users/odoo-server/odoo-backup/run_backup.sh`` archives
+**KARUSINDO_200826** (that name is correct for this backup). It writes a
+``.dump.tmp``, checks the size, then ``mv`` to ``.dump``.
 
 .. _backup-integer-expression:
 
@@ -26,108 +27,75 @@ A run that looks like this:
    mv: rename /Users/odoo-server/Backup/KARUSINDO_200826_20260820_141727.dump.tmp \
      to /Users/odoo-server/Backup/KARUSINDO_200826_20260820_141727.dump: No such file or directory
 
-is **not** two separate bugs. The dump file was never created. The size check and
-``mv`` are follow-on errors from the same script continuing after ``pg_dump``
-failed.
-
-What each line means
---------------------
-
-``line 76: [: : integer expression expected``
-    Bash ``[`` was asked to compare a number, but the value was **empty**. Typical
-    code around that line:
-
-    .. code-block:: bash
-
-       DUMP_SIZE=$(stat -c%s "$DUMP_TMP" 2>/dev/null)
-       if [ "$DUMP_SIZE" -gt 0 ]; then
-           mv "$DUMP_TMP" "$DUMP_FILE"
-       fi
-
-    When ``$DUMP_TMP`` does not exist (or when GNU ``stat -c%s`` is used on
-    macOS), ``DUMP_SIZE`` is empty. ``[ "" -gt 0 ]`` prints *integer expression
-    expected* and returns status **2**.
-
-    An ``if`` treats that as false. The "dump looks good" branch is skipped,
-    **and** the "dump failed, exit 1" branch is also skipped. The script keeps
-    going.
-
-``mv: ...dump.tmp ... No such file or directory``
-    ``pg_dump -Fc -f file.dump.tmp`` never wrote that path. ``mv`` then tries to
-    rename a file that is not there. On macOS, that message means the **source**
-    ``.tmp`` is missing.
-
-The real failure is therefore **before line 76**: ``pg_dump`` did not produce a
-dump. Scroll up in the same terminal for the Postgres error. Common causes:
-
-* ``pg_dump`` is not on ``PATH`` (Postgres.app's ``bin`` directory is missing).
-* PostgreSQL is not running.
-* The database name in the script does not exist (here:
-  ``KARUSINDO_200826``).
-* The role used to connect (often ``postgres`` or the macOS user) cannot connect.
-* The backup directory is not writable, so ``-f`` cannot create the file.
-
-Confirm on the Mac Mini
------------------------
-
-Print the size check and the ``mv`` around line 76:
+is **not** two separate bugs, and it is **not** the wrong database name. Line 76
+of the wrapper is:
 
 .. code-block:: bash
 
-   sed -n '60,90p' /Users/odoo-server/odoo-backup/run_backup.sh
+   DB_SIZE=$(stat -f%z "$DB_TMP" 2>> "$ERR")
 
-Then check the tools and the database the dump name refers to:
+   if [ "$DB_SIZE" -lt 1000000 ]; then
+     echo "ERROR: pg_dump file too small: $DB_SIZE bytes" >> "$ERR"
+     rm -f "$DB_TMP"
+     exit 1
+   fi
+
+   mv "$DB_TMP" "$DB_FILE"
+
+``pg_dump`` never created ``KARUSINDO_200826_…dump.tmp``. ``stat`` printed
+nothing, so ``DB_SIZE`` was empty. ``[ "" -lt 1000000 ]`` prints *integer
+expression expected* and returns status **2**.
+
+An ``if`` treats that as false, so the script **does not** take the "too small,
+exit 1" branch. It falls through to ``mv`` of a file that is not there.
+
+``pg_dump`` stderr was appended only to ``odoo_backup_error.log``, which is why
+the terminal showed only these two bash lines. Read that log (and
+``odoo_backup.log``) for the Postgres message.
+
+What to check
+-------------
 
 .. code-block:: bash
 
-   export PATH="/Applications/Postgres.app/Contents/Versions/15/bin:$PATH"
-   command -v pg_dump
-   pg_dump --version
-   psql -U postgres -d postgres -c '\l'
+   tail -n 50 /Users/odoo-server/odoo-backup/odoo_backup_error.log
+   tail -n 50 /Users/odoo-server/odoo-backup/odoo_backup.log
    ls -lh /Users/odoo-server/Backup/KARUSINDO_200826_20260820_141727.dump*
+   export PATH="/Applications/Postgres.app/Contents/Versions/15/bin:$PATH"
+   pg_isready -h 127.0.0.1 -p 5432
+   psql -h 127.0.0.1 -p 5432 -U odoo-server -d KARUSINDO_200826 -c 'SELECT 1'
 
-If ``\l`` does not list ``KARUSINDO_200826``, the wrapper is pointing at the
-wrong database. If ``pg_dump`` is missing, the dump step never runs.
+Typical causes of a missing ``.tmp`` with this wrapper:
 
-Fix the wrapper
----------------
+* ``pg_dump`` could not connect as ``odoo-server`` on TCP ``127.0.0.1:5432``
+  (password / ``pg_hba.conf``). The original script still treated a later empty
+  size as "not too small".
+* stdout of ``pg_dump`` was redirected into ``odoo_backup.log`` (``>> "$LOG"``).
+  If ``-f`` did not take effect, the dump lands in the **log** (the log file
+  jumps by hundreds of MB) and no ``.dump.tmp`` is created, while ``pg_dump``
+  still exits 0.
+* Homebrew GNU ``stat`` is ahead of ``/usr/bin/stat`` on ``PATH``. GNU
+  ``stat -f%z`` does not print a byte size, so ``DB_SIZE`` is empty even when
+  the dump exists. Use ``/usr/bin/stat -f%z``.
 
-Do **not** treat an empty size as "not too small". Test that the file exists,
-force a numeric size (default ``0``), and only then ``mv``:
+Fix
+---
 
-.. code-block:: bash
+* Require the ``.tmp`` file to exist before comparing size.
+* Default a missing size to ``0`` so ``[`` never sees an empty string.
+* Put ``-f "$DB_TMP"`` **before** the database name; do not redirect dump
+  stdout into the log.
+* Print ``pg_dump`` / ``psql`` errors on the terminal as well as the log.
 
-   if [ ! -f "$DUMP_TMP" ]; then
-     echo "ERROR: pg_dump did not create $DUMP_TMP"
-     exit 1
-   fi
-
-   DUMP_SIZE=$(stat -f%z "$DUMP_TMP")   # macOS; GNU is stat -c%s
-   : "${DUMP_SIZE:=0}"
-   if [ "$DUMP_SIZE" -lt 1048576 ]; then
-     echo "ERROR: dump too small ($DUMP_SIZE bytes)"
-     exit 1
-   fi
-
-   mv "$DUMP_TMP" "$DUMP_FILE"
-
-Use ``stat -f%z`` on macOS. ``stat -c%s`` is Linux and yields an empty size on
-a Mac even when the dump **did** succeed.
-
-A drop-in script that sets the Postgres.app ``PATH``, checks that the database
-exists, refuses to ``mv`` a missing ``.tmp``, and also zips the filestore is
-:file:`scripts/run_backup.sh` next to this page. Copy it over the wrapper:
+:file:`scripts/run_backup.sh` next to this page is a drop-in replacement that
+keeps TCP, the lock, the Samsung SSD copy, and 7/14-day cleanup, still for
+**KARUSINDO_200826**:
 
 .. code-block:: bash
 
    cp db_management/scripts/run_backup.sh /Users/odoo-server/odoo-backup/run_backup.sh
    chmod +x /Users/odoo-server/odoo-backup/run_backup.sh
-   /Users/odoo-server/odoo-backup/run_backup.sh KARUSINDO_200826
-
-Pass the production name (``KARUSINDO_110826``) when that is the database you
-intend to archive. The dump file name is ``<database>_<timestamp>.dump``; the
-timestamp in the error (``20260820_141727``) is when the failed run started, not
-proof that a dump was written.
+   /Users/odoo-server/odoo-backup/run_backup.sh
 
 .. seealso::
    :ref:`On-premises database management <db_premise>`
