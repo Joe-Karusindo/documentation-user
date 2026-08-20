@@ -87,13 +87,15 @@ Fix
   stdout into the log.
 * Print ``pg_dump`` / ``psql`` errors on the terminal as well as the log.
 
-:file:`scripts/run_backup.sh` next to this page is a drop-in replacement that
+:file:`scripts/run_backup.sh` in this repository is a drop-in replacement that
 keeps TCP, the lock, the Samsung SSD copy, and 7/14-day cleanup, still for
-**KARUSINDO_200826**:
+**KARUSINDO_200826**. That path exists only in the git checkout, not in
+``~`` on the Mac Mini. Download it:
 
 .. code-block:: bash
 
-   cp db_management/scripts/run_backup.sh /Users/odoo-server/odoo-backup/run_backup.sh
+   curl -fsSL -o /Users/odoo-server/odoo-backup/run_backup.sh \
+     https://raw.githubusercontent.com/Joe-Karusindo/documentation-user/cursor/fix-odoo-backup-size-check-7a98/db_management/scripts/run_backup.sh
    chmod +x /Users/odoo-server/odoo-backup/run_backup.sh
    /Users/odoo-server/odoo-backup/run_backup.sh
 
