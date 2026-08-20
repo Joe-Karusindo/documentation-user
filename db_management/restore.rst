@@ -57,6 +57,82 @@ Technical --> Parameters --> System Parameters` and edit the parameter. For a
 website, also check the website domain in :menuselection:`Website --> Configuration
 --> Settings`.
 
+.. _restore-split-backup:
+
+Restore a dump and a filestore zip
+==================================
+
+A pair of files such as :file:`KARUSINDO_110826_20260820_105840.dump` plus
+:file:`KARUSINDO_110826_20260820_105840_filestore.zip` is a **split** backup:
+PostgreSQL in one file, attachments in the other. The login page comes back as
+plain HTML **every time** when those two pieces are not restored to the **same
+database name** and the **same** ``data_dir``.
+
+Odoo always reads:
+
+:file:`<data_dir>/filestore/<exact_database_name>/<two_char_hash>/...`
+
+On a macOS source install that is:
+
+:file:`~/Library/Application Support/Odoo/filestore/<database_name>/`
+
+not :file:`~/.local/share/Odoo/filestore/` (that Linux path is a different
+``data_dir``). A restore script that unzips into the Linux path leaves macOS
+Odoo with an empty filestore, so :file:`/web/login` has no CSS.
+
+The PostgreSQL database name and the filestore **folder** name must be
+identical. Restoring the dump as ``KARUSINDO_200826`` while unzipping into
+:file:`filestore/KARUSINDO_110826` produces the unstyled login page again.
+
+#. Stop Odoo.
+#. Create the database under the name you will use in the login form, then
+   restore the dump:
+
+   .. code-block:: bash
+
+      DB_NAME="KARUSINDO_200826"
+      dropdb --if-exists "$DB_NAME"
+      createdb "$DB_NAME"
+      pg_restore --no-owner --no-acl -d "$DB_NAME" \
+        /path/to/KARUSINDO_110826_20260820_105840.dump
+
+   ``pg_restore`` may exit with warnings; that is normal for an Odoo dump.
+
+#. Inspect the zip **before** extracting. Hashed folders (``f4/``, ``aa/``, …)
+   must end up **directly** in the dest folder, with no extra wrapping
+   directory:
+
+   .. code-block:: bash
+
+      unzip -l /path/to/KARUSINDO_110826_*_filestore.zip | head -30
+
+#. Extract into the folder that matches ``DB_NAME``. On macOS:
+
+   .. code-block:: bash
+
+      DATA_DIR="$HOME/Library/Application Support/Odoo"
+      DEST="$DATA_DIR/filestore/$DB_NAME"
+      mkdir -p "$DEST"
+      unzip -q /path/to/KARUSINDO_110826_*_filestore.zip -d /tmp/odoo-fs
+      # If the zip contains f4/, aa/, … at the top:
+      rsync -a /tmp/odoo-fs/ "$DEST/"
+      # If it contains filestore/f4/ … use /tmp/odoo-fs/filestore/ instead.
+      # If it contains KARUSINDO_110826/f4/ … use that inner folder.
+      find "$DEST" -type f | wc -l
+
+   The file count must be large (hundreds of thousands for a ~29 GB zip). A
+   count of ``0`` or a dest that only contains another named folder means the
+   GUI will be incomplete again.
+
+#. Start Odoo and open :file:`/web/login`. The layout, website logo, and
+   backend theme should load **without** deleting ``ir.attachment`` rows.
+   Regenerating assets is only a workaround when the filestore was not copied.
+
+Put ``DB_NAME`` and ``DEST`` in the restore script (for example
+:file:`restore_odoo_local_only.sh`) so both steps always use the same name and
+the macOS ``data_dir``. Do not hard-code the old dump name for the filestore
+folder.
+
 Incomplete interface after restore
 ==================================
 
@@ -354,8 +430,14 @@ copy the filestore or re-upload the images in the theme settings.
 Prevent the issue
 =================
 
-* Download **zip (includes filestore)** from the database manager, not a raw SQL
-  dump, unless you also archive :file:`filestore/<database_name>` yourself.
+* Prefer one Odoo manager backup (**zip includes filestore**) so dump and
+  files cannot drift apart.
+* For a split ``.dump`` + ``*_filestore.zip`` pair, restore both, and make the
+  filestore folder name **equal** to the PostgreSQL database name.
+* On macOS, unzip into :file:`~/Library/Application Support/Odoo/filestore/`,
+  not :file:`~/.local/share/Odoo/filestore/`.
+* After unzip, hashed directories (``f4/``, ``aa/``, …) must sit directly in
+  that folder. An extra wrapping directory produces the unstyled login page.
 * Restore with the **same major version** and the **same extra modules**,
   including any backend theme, **before** the first asset regeneration.
 * After a restore, open :file:`/web/login` once and confirm that the layout, the
