@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_container_deposit" model="ir.actions.report">
+        <field name="name">Container Deposit</field>
+        <field name="model">import.container.deposit</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">container_deposit_management.report_container_deposit_document</field>
+        <field name="report_file">container_deposit_management.report_container_deposit_document</field>
+        <field name="print_report_name">'Container Deposit - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_import_container_deposit"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_container_deposit_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-size: 12px;">
+                        <div class="text-center mb-3">
+                            <h2 style="margin: 0;">Container Deposit</h2>
+                            <div><strong><t t-esc="doc.name"/></strong></div>
+                            <div>Status: <t t-esc="dict(doc._fields['state'].selection).get(doc.state)"/></div>
+                        </div>
+
+                        <table class="table table-sm table-borderless" style="width: 100%; margin-bottom: 16px;">
+                            <tr>
+                                <td style="width: 50%; vertical-align: top;">
+                                    <strong>FTM Reference</strong><br/>
+                                    <t t-esc="doc.ftm_id.display_name"/><br/>
+                                    <strong>Container Vendor</strong><br/>
+                                    <t t-esc="doc.container_vendor_id.display_name or '-'"/>
+                                </td>
+                                <td style="width: 50%; vertical-align: top;">
+                                    <strong>Custom Doc Number</strong><br/>
+                                    <t t-esc="doc.custom_doc_number or '-'"/><br/>
+                                    <strong>AWB / BL Number</strong><br/>
+                                    <t t-esc="doc.no_awb or '-'"/><br/>
+                                    <strong>Clearance Date</strong><br/>
+                                    <span t-field="doc.clearance_date"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <h4>Deposit / Initial Charges</h4>
+                        <table class="table table-sm table-bordered" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Product / Charge</th>
+                                    <th>Vendor</th>
+                                    <th class="text-right">Amount</th>
+                                    <th>Taxes</th>
+                                    <th>Deposit Account</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.deposit_line_ids" t-as="line">
+                                    <td><t t-esc="line.product_id.display_name"/></td>
+                                    <td><t t-esc="line.vendor_id.display_name"/></td>
+                                    <td class="text-right"><span t-field="line.amount"/></td>
+                                    <td><t t-esc="', '.join(line.tax_ids.mapped('name'))"/></td>
+                                    <td><t t-esc="line.account_id.display_name"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="row mt-3">
+                            <div class="col-6"/>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Deposit Amount</strong></td>
+                                        <td class="text-right"><span t-field="doc.deposit_amount"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Refund Amount</strong></td>
+                                        <td class="text-right"><span t-field="doc.refund_amount"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Final Deducted Charge</strong></td>
+                                        <td class="text-right"><span t-field="doc.deducted_charge_amount"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Settlement Balance</strong></td>
+                                        <td class="text-right"><span t-field="doc.settlement_balance"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-5" style="page-break-inside: avoid;">
+                            <div class="col-4 text-center">
+                                <div>Prepared by (Impor)</div>
+                                <div style="margin-top: 60px;">________________________</div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div>Reviewed by (Management)</div>
+                                <div style="margin-top: 60px;">________________________</div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div>Finance</div>
+                                <div style="margin-top: 60px;">________________________</div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
