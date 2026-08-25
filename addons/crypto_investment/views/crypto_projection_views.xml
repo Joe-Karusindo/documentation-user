@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crypto_projection_tree" model="ir.ui.view">
+        <field name="name">crypto.price.projection.tree</field>
+        <field name="model">crypto.price.projection</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="horizon_days"/>
+                <field name="lookback_days"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_crypto_projection_form" model="ir.ui.view">
+        <field name="name">crypto.price.projection.form</field>
+        <field name="model">crypto.price.projection</field>
+        <field name="arch" type="xml">
+            <form string="Price Projection 14 Days">
+                <header>
+                    <button name="action_compute" type="object" string="Compute Projection"
+                            class="btn-primary"/>
+                    <button name="action_draft" type="object" string="Reset to Draft"
+                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="horizon_days"/>
+                            <field name="lookback_days"/>
+                        </group>
+                        <group>
+                            <field name="asset_ids" widget="many2many_tags"
+                                      options="{'no_create': True}"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Catatan analisa..."/>
+                    </group>
+                    <notebook>
+                        <page string="Analisa &amp; Proyeksi" name="lines">
+                            <field name="line_ids">
+                                <tree decoration-success="trend == 'up'"
+                                      decoration-danger="trend == 'down'"
+                                      decoration-muted="trend == 'sideways'">
+                                    <field name="asset_id"/>
+                                    <field name="symbol" optional="hide"/>
+                                    <field name="current_price"/>
+                                    <field name="projected_price"/>
+                                    <field name="change_amount"/>
+                                    <field name="change_percent"/>
+                                    <field name="trend"/>
+                                    <field name="confidence"/>
+                                    <field name="sample_count"/>
+                                    <field name="r_squared"/>
+                                    <field name="analysis"/>
+                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="asset_id"/>
+                                            <field name="current_price"/>
+                                            <field name="projected_price"/>
+                                            <field name="change_percent"/>
+                                            <field name="trend"/>
+                                        </group>
+                                        <group>
+                                            <field name="slope"/>
+                                            <field name="confidence"/>
+                                            <field name="method"/>
+                                            <field name="sample_count"/>
+                                            <field name="r_squared"/>
+                                        </group>
+                                    </group>
+                                    <group string="Analisis">
+                                        <field name="analysis" nolabel="1"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_crypto_projection_line_tree" model="ir.ui.view">
+        <field name="name">crypto.price.projection.line.tree</field>
+        <field name="model">crypto.price.projection.line</field>
+        <field name="arch" type="xml">
+            <tree create="0" edit="0" delete="0"
+                  decoration-success="trend == 'up'"
+                  decoration-danger="trend == 'down'">
+                <field name="projection_id"/>
+                <field name="asset_id"/>
+                <field name="current_price"/>
+                <field name="projected_price"/>
+                <field name="change_percent"/>
+                <field name="trend"/>
+                <field name="confidence"/>
+                <field name="analysis"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_crypto_projection" model="ir.actions.act_window">
+        <field name="name">Proyeksi Harga 14 Hari</field>
+        <field name="res_model">crypto.price.projection</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Buat proyeksi harga naik/turun 2 minggu ke depan
+            </p>
+            <p>Menggunakan regresi linear atas histori harga (lookback default 30 hari).</p>
+        </field>
+    </record>
+
+    <record id="action_crypto_projection_lines" model="ir.actions.act_window">
+        <field name="name">Hasil Proyeksi</field>
+        <field name="res_model">crypto.price.projection.line</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

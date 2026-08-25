@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crypto_dashboard_form" model="ir.ui.view">
+        <field name="name">crypto.dashboard.form</field>
+        <field name="model">crypto.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Crypto Dashboard" create="0" delete="0" class="o_crypto_dashboard">
+                <header>
+                    <button name="action_refresh" type="object" string="Refresh" class="btn-primary"/>
+                    <button name="action_open_assets" type="object" string="Assets"/>
+                    <button name="action_open_transactions" type="object" string="Transactions"/>
+                    <button name="action_open_pnl" type="object" string="P&amp;L Report"/>
+                    <button name="action_open_projection" type="object" string="Proyeksi 14 Hari"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Crypto Portfolio Dashboard</h1>
+                    </div>
+                    <group>
+                        <group string="Nilai Portfolio">
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total_market_value"/>
+                            <field name="total_cost_basis"/>
+                            <field name="total_unrealized_pnl"/>
+                            <field name="total_realized_pnl"/>
+                            <field name="total_pnl"/>
+                        </group>
+                        <group string="Aktivitas">
+                            <field name="asset_count"/>
+                            <field name="buy_count"/>
+                            <field name="sell_count"/>
+                        </group>
+                    </group>
+                    <group string="Proyeksi Harga">
+                        <field name="last_projection_summary" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crypto_dashboard" model="ir.actions.server">
+        <field name="name">Crypto Dashboard</field>
+        <field name="model_id" ref="model_crypto_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_dashboard()</field>
+    </record>
+
+    <record id="view_crypto_board_form" model="ir.ui.view">
+        <field name="name">crypto.board.form</field>
+        <field name="model">board.board</field>
+        <field name="mode">primary</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Crypto Dashboard Board" create="0" delete="0" edit="0">
+                <board style="2-1">
+                    <column>
+                        <action name="%(action_crypto_asset)d" string="Crypto Assets (Treeview)"
+                                view_mode="tree,graph"/>
+                        <action name="%(action_crypto_transaction)d" string="Histori Jual Beli"
+                                view_mode="tree,graph"/>
+                    </column>
+                    <column>
+                        <action name="%(action_crypto_projection_lines)d" string="Proyeksi Naik/Turun"
+                                view_mode="tree"/>
+                        <action name="%(action_crypto_price_history)d" string="Price History"
+                                view_mode="graph"/>
+                    </column>
+                </board>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crypto_board" model="ir.actions.act_window">
+        <field name="name">Dashboard Board</field>
+        <field name="res_model">board.board</field>
+        <field name="view_mode">form</field>
+        <field name="usage">menu</field>
+        <field name="view_id" ref="view_crypto_board_form"/>
+    </record>
+</odoo>

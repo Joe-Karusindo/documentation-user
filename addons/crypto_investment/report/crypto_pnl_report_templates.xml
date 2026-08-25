@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_crypto_pnl" model="ir.actions.report">
+        <field name="name">Crypto Profit &amp; Loss</field>
+        <field name="model">crypto.pnl.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">crypto_investment.report_crypto_pnl</field>
+        <field name="report_file">crypto_investment.report_crypto_pnl</field>
+        <field name="binding_model_id" ref="model_crypto_pnl_wizard"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_crypto_pnl">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Crypto Profit &amp; Loss Report</h2>
+                        <p>
+                            Period:
+                            <strong t-field="o.date_from"/> —
+                            <strong t-field="o.date_to"/>
+                        </p>
+                        <p>
+                            Company: <span t-field="o.company_id.name"/>
+                        </p>
+
+                        <table class="table table-sm table-bordered mt16">
+                            <thead>
+                                <tr>
+                                    <th>Crypto</th>
+                                    <th class="text-end">Buy Qty</th>
+                                    <th class="text-end">Buy Amount</th>
+                                    <th class="text-end">Sell Qty</th>
+                                    <th class="text-end">Sell Amount</th>
+                                    <th class="text-end">Fees</th>
+                                    <th class="text-end">Realized P&amp;L</th>
+                                    <th class="text-end">Held Qty</th>
+                                    <th class="text-end">Unrealized P&amp;L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.line_ids" t-as="line">
+                                    <td><span t-field="line.asset_id.display_name"/></td>
+                                    <td class="text-end"><span t-field="line.buy_qty"/></td>
+                                    <td class="text-end"><span t-field="line.buy_amount"/></td>
+                                    <td class="text-end"><span t-field="line.sell_qty"/></td>
+                                    <td class="text-end"><span t-field="line.sell_amount"/></td>
+                                    <td class="text-end"><span t-field="line.fees"/></td>
+                                    <td class="text-end"><span t-field="line.realized_pnl"/></td>
+                                    <td class="text-end"><span t-field="line.quantity_held"/></td>
+                                    <td class="text-end"><span t-field="line.unrealized_pnl"/></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total</th>
+                                    <th/>
+                                    <th class="text-end"><span t-field="o.total_buy"/></th>
+                                    <th/>
+                                    <th class="text-end"><span t-field="o.total_sell"/></th>
+                                    <th class="text-end"><span t-field="o.total_fees"/></th>
+                                    <th class="text-end"><span t-field="o.total_realized_pnl"/></th>
+                                    <th/>
+                                    <th class="text-end"><span t-field="o.total_unrealized_pnl"/></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

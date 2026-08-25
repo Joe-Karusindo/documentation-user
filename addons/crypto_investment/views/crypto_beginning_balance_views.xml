@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crypto_beginning_balance_tree" model="ir.ui.view">
+        <field name="name">crypto.beginning.balance.tree</field>
+        <field name="model">crypto.beginning.balance</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="cash_balance"/>
+                <field name="total_crypto_value"/>
+                <field name="total_portfolio"/>
+                <field name="state"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_crypto_beginning_balance_form" model="ir.ui.view">
+        <field name="name">crypto.beginning.balance.form</field>
+        <field name="model">crypto.beginning.balance</field>
+        <field name="arch" type="xml">
+            <form string="Beginning Balance">
+                <header>
+                    <button name="action_post" type="object" string="Post"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '!=', 'draft')]}"
+                            groups="crypto_investment.group_crypto_manager"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            attrs="{'invisible': [('state', '!=', 'posted')]}"
+                            groups="crypto_investment.group_crypto_manager"/>
+                    <button name="action_draft" type="object" string="Reset to Draft"
+                            attrs="{'invisible': [('state', '!=', 'cancelled')]}"
+                            groups="crypto_investment.group_crypto_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,posted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                            <field name="cash_balance" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                            <field name="journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        </group>
+                        <group>
+                            <field name="total_crypto_value"/>
+                            <field name="total_portfolio"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="move_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Crypto Holdings" name="lines">
+                            <field name="line_ids" attrs="{'readonly': [('state', '!=', 'draft')]}">
+                                <tree editable="bottom">
+                                    <field name="asset_id"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_cost"/>
+                                    <field name="total_value" sum="Total"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crypto_beginning_balance" model="ir.actions.act_window">
+        <field name="name">Beginning Balance</field>
+        <field name="res_model">crypto.beginning.balance</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Catat saldo awal kas &amp; holding crypto
+            </p>
+        </field>
+    </record>
+</odoo>

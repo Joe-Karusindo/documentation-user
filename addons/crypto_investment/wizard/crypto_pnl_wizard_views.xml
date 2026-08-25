@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crypto_pnl_wizard_form" model="ir.ui.view">
+        <field name="name">crypto.pnl.wizard.form</field>
+        <field name="model">crypto.pnl.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Crypto Profit &amp; Loss">
+                <group>
+                    <group>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                        <field name="asset_ids" widget="many2many_tags"
+                                  options="{'no_create': True}"/>
+                    </group>
+                    <group>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="total_buy"/>
+                        <field name="total_sell"/>
+                        <field name="total_fees"/>
+                        <field name="total_realized_pnl"/>
+                        <field name="total_unrealized_pnl"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Detail per Crypto">
+                        <field name="line_ids">
+                            <tree create="0" delete="0" edit="0"
+                                  decoration-success="realized_pnl &gt; 0"
+                                  decoration-danger="realized_pnl &lt; 0">
+                                <field name="asset_id"/>
+                                <field name="buy_qty"/>
+                                <field name="buy_amount"/>
+                                <field name="sell_qty"/>
+                                <field name="sell_amount"/>
+                                <field name="fees"/>
+                                <field name="realized_pnl" sum="Realized"/>
+                                <field name="quantity_held"/>
+                                <field name="cost_basis"/>
+                                <field name="market_value"/>
+                                <field name="unrealized_pnl" sum="Unrealized"/>
+                                <field name="currency_id" invisible="1"/>
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_compute" type="object" string="Compute"
+                            class="btn-primary"/>
+                    <button name="action_print_report" type="object" string="Print PDF"
+                            class="btn-secondary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crypto_pnl_wizard" model="ir.actions.act_window">
+        <field name="name">Profit &amp; Loss by Date</field>
+        <field name="res_model">crypto.pnl.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

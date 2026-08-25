@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree / List -->
+    <record id="view_crypto_asset_tree" model="ir.ui.view">
+        <field name="name">crypto.asset.tree</field>
+        <field name="model">crypto.asset</field>
+        <field name="arch" type="xml">
+            <tree string="Crypto Assets"
+                  decoration-success="unrealized_pnl &gt; 0"
+                  decoration-danger="unrealized_pnl &lt; 0">
+                <field name="symbol"/>
+                <field name="name"/>
+                <field name="quantity"/>
+                <field name="average_cost"/>
+                <field name="current_price"/>
+                <field name="cost_basis" sum="Total Cost"/>
+                <field name="market_value" sum="Total Market"/>
+                <field name="unrealized_pnl" sum="Unrealized"/>
+                <field name="unrealized_pnl_percent"/>
+                <field name="realized_pnl" sum="Realized"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_crypto_asset_form" model="ir.ui.view">
+        <field name="name">crypto.asset.form</field>
+        <field name="model">crypto.asset</field>
+        <field name="arch" type="xml">
+            <form string="Crypto Asset">
+                <header>
+                    <button name="action_update_price" type="object" string="Record Price History"
+                            class="btn-secondary"/>
+                    <button name="action_view_transactions" type="object" string="Transactions"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_transactions" type="object" class="oe_stat_button" icon="fa-exchange">
+                            <field name="transaction_count" widget="statinfo" string="Transactions"/>
+                        </button>
+                        <button name="action_view_price_history" type="object" class="oe_stat_button" icon="fa-line-chart">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Price History</span>
+                            </div>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                            attrs="{'invisible': [('active', '=', True)]}"/>
+                    <div class="oe_title">
+                        <label for="symbol"/>
+                        <h1><field name="symbol" placeholder="e.g. BTC"/></h1>
+                        <h2><field name="name" placeholder="e.g. Bitcoin"/></h2>
+                    </div>
+                    <group>
+                        <group string="Market">
+                            <field name="current_price"/>
+                            <field name="last_price_update"/>
+                            <field name="currency_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="Holdings">
+                            <field name="quantity"/>
+                            <field name="average_cost"/>
+                            <field name="cost_basis"/>
+                            <field name="market_value"/>
+                            <field name="unrealized_pnl"/>
+                            <field name="unrealized_pnl_percent"/>
+                            <field name="realized_pnl"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Accounting">
+                            <field name="account_asset_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Notes">
+                            <field name="notes"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Transactions" name="transactions">
+                            <field name="transaction_ids">
+                                <tree>
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="transaction_type"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_price"/>
+                                    <field name="total_amount"/>
+                                    <field name="realized_pnl"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Price History" name="history">
+                            <field name="price_history_ids">
+                                <tree editable="bottom">
+                                    <field name="date"/>
+                                    <field name="price"/>
+                                    <field name="source"/>
+                                    <field name="notes"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_crypto_asset_kanban" model="ir.ui.view">
+        <field name="name">crypto.asset.kanban</field>
+        <field name="model">crypto.asset</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="symbol"/>
+                <field name="name"/>
+                <field name="current_price"/>
+                <field name="quantity"/>
+                <field name="market_value"/>
+                <field name="unrealized_pnl"/>
+                <field name="currency_id"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_color_#{record.color.raw_value or 0}">
+                            <div class="o_kanban_record_top mb-1">
+                                <strong><field name="symbol"/></strong>
+                                <span class="text-muted ms-1"><field name="name"/></span>
+                            </div>
+                            <div>Qty: <field name="quantity"/></div>
+                            <div>Price: <field name="current_price"/></div>
+                            <div>Value: <field name="market_value" widget="monetary"/></div>
+                            <div>P&amp;L: <field name="unrealized_pnl" widget="monetary"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_crypto_asset_graph" model="ir.ui.view">
+        <field name="name">crypto.asset.graph</field>
+        <field name="model">crypto.asset</field>
+        <field name="arch" type="xml">
+            <graph string="Portfolio by Asset" type="pie">
+                <field name="symbol" type="row"/>
+                <field name="market_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_crypto_asset_pivot" model="ir.ui.view">
+        <field name="name">crypto.asset.pivot</field>
+        <field name="model">crypto.asset</field>
+        <field name="arch" type="xml">
+            <pivot string="Crypto Portfolio">
+                <field name="symbol" type="row"/>
+                <field name="market_value" type="measure"/>
+                <field name="cost_basis" type="measure"/>
+                <field name="unrealized_pnl" type="measure"/>
+                <field name="realized_pnl" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_crypto_asset_search" model="ir.ui.view">
+        <field name="name">crypto.asset.search</field>
+        <field name="model">crypto.asset</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="symbol"/>
+                <field name="name"/>
+                <filter string="Held" name="held" domain="[('quantity', '&gt;', 0)]"/>
+                <filter string="Profit" name="profit" domain="[('unrealized_pnl', '&gt;', 0)]"/>
+                <filter string="Loss" name="loss" domain="[('unrealized_pnl', '&lt;', 0)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_crypto_asset" model="ir.actions.act_window">
+        <field name="name">Crypto Assets</field>
+        <field name="res_model">crypto.asset</field>
+        <field name="view_mode">tree,kanban,form,graph,pivot</field>
+        <field name="context">{'search_default_held': 0}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tambahkan aset crypto pertama Anda
+            </p>
+            <p>Kelola BTC, ETH, dan aset lain beserta nilai portfolio.</p>
+        </field>
+    </record>
+</odoo>
