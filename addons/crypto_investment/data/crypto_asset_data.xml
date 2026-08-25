@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="crypto_asset_btc" model="crypto.asset">
+        <field name="name">Bitcoin</field>
+        <field name="symbol">BTC</field>
+        <field name="current_price">65000.0</field>
+        <field name="color">1</field>
+    </record>
+    <record id="crypto_asset_eth" model="crypto.asset">
+        <field name="name">Ethereum</field>
+        <field name="symbol">ETH</field>
+        <field name="current_price">3500.0</field>
+        <field name="color">2</field>
+    </record>
+    <record id="crypto_asset_usdt" model="crypto.asset">
+        <field name="name">Tether</field>
+        <field name="symbol">USDT</field>
+        <field name="current_price">1.0</field>
+        <field name="color">3</field>
+    </record>
+    <record id="crypto_asset_bnb" model="crypto.asset">
+        <field name="name">BNB</field>
+        <field name="symbol">BNB</field>
+        <field name="current_price">580.0</field>
+        <field name="color">4</field>
+    </record>
+    <record id="crypto_asset_sol" model="crypto.asset">
+        <field name="name">Solana</field>
+        <field name="symbol">SOL</field>
+        <field name="current_price">145.0</field>
+        <field name="color">5</field>
+    </record>
+</odoo>
