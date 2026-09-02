@@ -4,6 +4,10 @@
 
 Tujuan: memberi informasi saat stok product lebih rendah dari quantity ambang (quantity backorder).
 
+Untuk isi **Min Quantity + Trigger di setiap product** secara klik-per-klik, pakai
+[Setting Backorder + Trigger per Product (cara tercepat)](panduan_cepat_backorder_trigger_product.md).
+Dokumen ini adalah referensi lengkap.
+
 ---
 
 ## 1. Ringkasan

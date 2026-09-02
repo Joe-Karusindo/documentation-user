@@ -4,4 +4,5 @@ Kumpulan panduan operasional untuk Odoo 16 Community Edition.
 
 | Dokumen | Isi |
 | --- | --- |
-| [Panduan Setting Backorder pada Product](panduan_backorder_product.md) | Cara set ambang quantity di product agar sistem memberi informasi saat stok lebih rendah dari quantity tersebut, plus setting Create Backorder pada Operation Types. |
+| **[Setting Backorder + Trigger per Product (cara tercepat)](panduan_cepat_backorder_trigger_product.md)** | Step-by-step klik per klik: tampilkan kolom Trigger, isi Min Quantity + Trigger di setiap product, cara list, dan import. |
+| [Referensi lengkap backorder product](panduan_backorder_product.md) | Penjelasan konsep, Forecasted, Operation Types Create Backorder, contoh angka, troubleshooting. |
