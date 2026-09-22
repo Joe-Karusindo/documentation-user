@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_crypto_root"
+              name="Crypto Investment"
+              web_icon="crypto_investment,static/description/icon.png"
+              sequence="45"
+              groups="crypto_investment.group_crypto_user"/>
+
+    <menuitem id="menu_crypto_dashboard"
+              name="Dashboard"
+              parent="menu_crypto_root"
+              sequence="1"/>
+
+    <menuitem id="menu_crypto_dashboard_main"
+              name="Portfolio Dashboard"
+              parent="menu_crypto_dashboard"
+              action="action_crypto_dashboard"
+              sequence="1"/>
+
+    <menuitem id="menu_crypto_dashboard_board"
+              name="Dashboard Board"
+              parent="menu_crypto_dashboard"
+              action="action_crypto_board"
+              sequence="2"/>
+
+    <menuitem id="menu_crypto_operations"
+              name="Operations"
+              parent="menu_crypto_root"
+              sequence="10"/>
+
+    <menuitem id="menu_crypto_assets"
+              name="Crypto Assets"
+              parent="menu_crypto_operations"
+              action="action_crypto_asset"
+              sequence="1"/>
+
+    <menuitem id="menu_crypto_beginning"
+              name="Beginning Balance"
+              parent="menu_crypto_operations"
+              action="action_crypto_beginning_balance"
+              sequence="2"
+              groups="crypto_investment.group_crypto_manager"/>
+
+    <menuitem id="menu_crypto_transactions"
+              name="Buy / Sell"
+              parent="menu_crypto_operations"
+              action="action_crypto_transaction"
+              sequence="3"/>
+
+    <menuitem id="menu_crypto_history"
+              name="Transaction History"
+              parent="menu_crypto_operations"
+              action="action_crypto_transaction_history"
+              sequence="4"/>
+
+    <menuitem id="menu_crypto_reporting"
+              name="Reporting"
+              parent="menu_crypto_root"
+              sequence="20"/>
+
+    <menuitem id="menu_crypto_pnl"
+              name="Profit &amp; Loss by Date"
+              parent="menu_crypto_reporting"
+              action="action_crypto_pnl_wizard"
+              sequence="1"/>
+
+    <menuitem id="menu_crypto_price_history"
+              name="Price History"
+              parent="menu_crypto_reporting"
+              action="action_crypto_price_history"
+              sequence="2"/>
+
+    <menuitem id="menu_crypto_analysis"
+              name="Analisa &amp; Proyeksi"
+              parent="menu_crypto_root"
+              sequence="30"/>
+
+    <menuitem id="menu_crypto_projection"
+              name="Proyeksi 14 Hari"
+              parent="menu_crypto_analysis"
+              action="action_crypto_projection"
+              sequence="1"/>
+
+    <menuitem id="menu_crypto_projection_results"
+              name="Hasil Proyeksi"
+              parent="menu_crypto_analysis"
+              action="action_crypto_projection_lines"
+              sequence="2"/>
+
+    <menuitem id="menu_crypto_config"
+              name="Configuration"
+              parent="menu_crypto_root"
+              sequence="90"
+              groups="crypto_investment.group_crypto_manager"/>
+
+    <menuitem id="menu_crypto_settings"
+              name="Settings"
+              parent="menu_crypto_config"
+              action="action_crypto_config_settings"
+              sequence="1"/>
+</odoo>

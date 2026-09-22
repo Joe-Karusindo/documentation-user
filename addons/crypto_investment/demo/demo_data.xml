@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Price history for projection samples -->
+    <record id="demo_price_btc_1" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=20)).strftime('%Y-%m-%d')"/>
+        <field name="price">62000.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_btc_2" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=15)).strftime('%Y-%m-%d')"/>
+        <field name="price">63500.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_btc_3" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+        <field name="price">64000.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_btc_4" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="price">64500.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_btc_5" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+        <field name="price">65000.0</field>
+        <field name="source">manual</field>
+    </record>
+
+    <record id="demo_price_eth_1" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_eth"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=20)).strftime('%Y-%m-%d')"/>
+        <field name="price">3200.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_eth_2" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_eth"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+        <field name="price">3400.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_eth_3" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_eth"/>
+        <field name="date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+        <field name="price">3500.0</field>
+        <field name="source">manual</field>
+    </record>
+
+    <record id="demo_price_sol_1" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_sol"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=14)).strftime('%Y-%m-%d')"/>
+        <field name="price">160.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_sol_2" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_sol"/>
+        <field name="date" eval="(DateTime.today() - relativedelta(days=7)).strftime('%Y-%m-%d')"/>
+        <field name="price">150.0</field>
+        <field name="source">manual</field>
+    </record>
+    <record id="demo_price_sol_3" model="crypto.price.history">
+        <field name="asset_id" ref="crypto_asset_sol"/>
+        <field name="date" eval="DateTime.today().strftime('%Y-%m-%d')"/>
+        <field name="price">145.0</field>
+        <field name="source">manual</field>
+    </record>
+
+    <!-- Opening holdings (done) so treeview/dashboard show values without account mapping -->
+    <record id="demo_tx_begin_btc" model="crypto.transaction">
+        <field name="date" eval="(DateTime.today() - relativedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="transaction_type">beginning</field>
+        <field name="quantity">0.5</field>
+        <field name="unit_price">60000.0</field>
+        <field name="unit_cost">60000.0</field>
+        <field name="state">done</field>
+        <field name="notes">Demo opening BTC</field>
+    </record>
+    <record id="demo_tx_begin_eth" model="crypto.transaction">
+        <field name="date" eval="(DateTime.today() - relativedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="asset_id" ref="crypto_asset_eth"/>
+        <field name="transaction_type">beginning</field>
+        <field name="quantity">5.0</field>
+        <field name="unit_price">3000.0</field>
+        <field name="unit_cost">3000.0</field>
+        <field name="state">done</field>
+        <field name="notes">Demo opening ETH</field>
+    </record>
+
+    <record id="demo_tx_buy_btc" model="crypto.transaction">
+        <field name="date" eval="(DateTime.today() - relativedelta(days=12)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="transaction_type">buy</field>
+        <field name="quantity">0.1</field>
+        <field name="unit_price">63000.0</field>
+        <field name="unit_cost">63000.0</field>
+        <field name="fee">15.0</field>
+        <field name="state">done</field>
+        <field name="notes">Demo buy BTC</field>
+    </record>
+    <record id="demo_tx_buy_sol" model="crypto.transaction">
+        <field name="date" eval="(DateTime.today() - relativedelta(days=8)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="asset_id" ref="crypto_asset_sol"/>
+        <field name="transaction_type">buy</field>
+        <field name="quantity">20.0</field>
+        <field name="unit_price">155.0</field>
+        <field name="unit_cost">155.0</field>
+        <field name="fee">5.0</field>
+        <field name="state">done</field>
+        <field name="notes">Demo buy SOL</field>
+    </record>
+    <record id="demo_tx_sell_eth" model="crypto.transaction">
+        <field name="date" eval="(DateTime.today() - relativedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="asset_id" ref="crypto_asset_eth"/>
+        <field name="transaction_type">sell</field>
+        <field name="quantity">1.0</field>
+        <field name="unit_price">3450.0</field>
+        <field name="unit_cost">3000.0</field>
+        <field name="fee">2.0</field>
+        <field name="state">done</field>
+        <field name="notes">Demo sell ETH</field>
+    </record>
+
+    <record id="demo_beginning_balance" model="crypto.beginning.balance">
+        <field name="date" eval="(DateTime.today() - relativedelta(days=30)).strftime('%Y-%m-%d')"/>
+        <field name="cash_balance">100000.0</field>
+        <field name="notes">Demo opening portfolio document (reference; holdings already seeded via transactions)</field>
+        <field name="state">draft</field>
+    </record>
+    <record id="demo_beginning_line_btc" model="crypto.beginning.balance.line">
+        <field name="balance_id" ref="demo_beginning_balance"/>
+        <field name="asset_id" ref="crypto_asset_btc"/>
+        <field name="quantity">0.5</field>
+        <field name="unit_cost">60000.0</field>
+    </record>
+    <record id="demo_beginning_line_eth" model="crypto.beginning.balance.line">
+        <field name="balance_id" ref="demo_beginning_balance"/>
+        <field name="asset_id" ref="crypto_asset_eth"/>
+        <field name="quantity">5.0</field>
+        <field name="unit_cost">3000.0</field>
+    </record>
+</odoo>
