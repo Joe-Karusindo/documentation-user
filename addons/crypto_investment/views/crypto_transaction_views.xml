@@ -75,7 +75,6 @@
                             <field name="move_id"/>
                             <field name="beginning_balance_id" readonly="1"
                                       attrs="{'invisible': [('beginning_balance_id', '=', False)]}"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                         <group string="Notes">
                             <field name="notes" attrs="{'readonly': [('state', '!=', 'draft')]}"/>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Crypto Investment',
-    'version': '16.0.1.0.0',
+    'version': '16.0.1.0.1',
     'category': 'Accounting/Accounting',
     'summary': 'Crypto jual-beli, accounting, laporan L/R, dashboard & proyeksi harga',
     'description': """
@@ -40,9 +40,9 @@ Modul custom untuk usaha/investasi jual-beli cryptocurrency:
         'views/crypto_projection_views.xml',
         'views/crypto_dashboard_views.xml',
         'views/res_config_settings_views.xml',
-        'views/menus.xml',
         'wizard/crypto_pnl_wizard_views.xml',
         'report/crypto_pnl_report_templates.xml',
+        'views/menus.xml',
     ],
     'demo': [
         'demo/demo_data.xml',
