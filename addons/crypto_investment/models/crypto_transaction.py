@@ -109,7 +109,7 @@ class CryptoTransaction(models.Model):
     journal_id = fields.Many2one(
         'account.journal',
         string='Journal',
-        domain="[('type', 'in', ('general', 'bank', 'cash')), ('company_id', '=', company_id)]",
+        domain="[('type', 'in', ('general', 'bank', 'cash'))]",
         check_company=True,
     )
     move_id = fields.Many2one('account.move', string='Journal Entry', readonly=True, copy=False)

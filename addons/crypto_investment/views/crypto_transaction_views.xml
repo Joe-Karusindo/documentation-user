@@ -70,6 +70,7 @@
                     </group>
                     <group>
                         <group string="Accounting">
+                            <field name="company_id" invisible="1"/>
                             <field name="journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                             <field name="move_id"/>
                             <field name="beginning_balance_id" readonly="1"
