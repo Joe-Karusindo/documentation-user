@@ -1,0 +1,25 @@
+{
+  "name": "PT. Karusindo Mega Saintifik",
+  "street": "",
+  "street2": "",
+  "city": "",
+  "zip": "",
+  "state_code": "",
+  "country_code": "ID",
+  "phone": "",
+  "mobile": "",
+  "email": "",
+  "website": "",
+  "vat": "",
+  "company_registry": "",
+  "currency_code": "IDR",
+  "sequence_prefix_hint": "KMS",
+  "bank_accounts": [
+    {
+      "acc_number": "",
+      "bank_name": "",
+      "acc_holder_name": "PT. Karusindo Mega Saintifik"
+    }
+  ],
+  "_comment": "Isi field kosong sebelum menjalankan sanitize_kms.py. bank_accounts boleh dikosongkan [] jika belum ada."
+}
