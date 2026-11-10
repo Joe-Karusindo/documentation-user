@@ -212,8 +212,17 @@ class CustomImport(models.Model):
                 continue
             rec.write({'state': 'cancel'})
 
+    @api.ondelete(at_uninstall=False)
+    def _unlink_if_not_locked_after_approve(self):
+        """Hook resmi Odoo: dipanggil otomatis saat unlink/Delete."""
+        self._check_not_locked_after_approve(_('menghapus'))
+
     def unlink(self):
-        """Blokir Delete (termasuk Action > Delete di treeview) setelah Approved."""
+        """Blokir Delete (Action > Delete di treeview & form) setelah Approved.
+
+        Double-check di sini selain @api.ondelete, agar tetap aman
+        meski ada override/inherit lain di rantai unlink.
+        """
         self._check_not_locked_after_approve(_('menghapus'))
         return super(CustomImport, self).unlink()
 
