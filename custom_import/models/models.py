@@ -175,20 +175,34 @@ class CustomImport(models.Model):
         
         return action
     
+    _LOCKED_AFTER_APPROVE_STATES = ('approval', 'validate', 'landed_cost', 'post', 'cancel')
+
+    def _get_state_label(self):
+        self.ensure_one()
+        return dict(self._fields['state'].selection).get(self.state, self.state)
+
+    def _check_not_locked_after_approve(self, action_label):
+        """Blokir aksi pada CPR yang sudah Approved (dan status berikutnya)."""
+        locked = self.filtered(lambda r: r.state in self._LOCKED_AFTER_APPROVE_STATES)
+        if locked:
+            details = '\n'.join(
+                "- %s (%s)" % (rec.name, rec._get_state_label()) for rec in locked
+            )
+            raise UserError(_(
+                "Tidak dapat %s Cost Payment Request yang sudah di-Approve "
+                "(atau status setelahnya).\n"
+                "Gunakan Cancel jika dokumen perlu dibatalkan.\n\n"
+                "Dokumen terkunci:\n%s"
+            ) % (action_label, details))
+
     def action_revisi(self):
         """Revisi hanya diizinkan sebelum Approved.
 
         Setelah dokumen Confirmed lalu di-Approve (dan status berikutnya),
         dokumen tidak boleh dikembalikan ke Draft; gunakan Cancel.
         """
-        locked_states = ('approval', 'validate', 'landed_cost', 'post', 'cancel')
+        self._check_not_locked_after_approve(_('merevisi'))
         for rec in self:
-            if rec.state in locked_states:
-                raise UserError(_(
-                    "Cost Payment Request '%s' berstatus '%s' dan sudah melewati Approve, "
-                    "sehingga tidak dapat di-Revisi.\n"
-                    "Silakan gunakan Cancel jika dokumen perlu dibatalkan."
-                ) % (rec.name, dict(rec._fields['state'].selection).get(rec.state, rec.state)))
             rec.write({'state': 'draft'})
 
     def action_cancel(self):
@@ -197,6 +211,11 @@ class CustomImport(models.Model):
             if rec.state == 'cancel':
                 continue
             rec.write({'state': 'cancel'})
+
+    def unlink(self):
+        """Blokir Delete (termasuk Action > Delete di treeview) setelah Approved."""
+        self._check_not_locked_after_approve(_('menghapus'))
+        return super(CustomImport, self).unlink()
 
     # Create Method untuk Sequence Otomatis
     @api.model
