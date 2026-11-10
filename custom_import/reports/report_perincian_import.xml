@@ -1,0 +1,118 @@
+<odoo>
+    <!-- Template Report (Fix KeyError: 'doc') -->
+    <template id="report_import_perincian_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 11px; color: black; line-height: 1.2;">
+                        
+                        <div style="width: 50%; margin-bottom: 25px;">
+                            <div style="font-weight: bold; font-size: 12px;">[SUP - LK - 0871] PT. KARUNIA JASINDO</div>
+                            <div>Jl. Jembatan III, 36AG</div>
+                            <div>Penjaringan, Penjaringan</div>
+                            <div>Jakarta Utara JK 14440</div>
+                            <div>Indonesia</div>
+                        </div>
+
+                        <div class="text-center" style="font-weight: bold; font-size: 12px; margin-bottom: 10px;">
+                            Perincian Kasbon Biaya Impor <t t-esc="doc.vendor_id.name"/> Invoice <t t-esc="doc.custom_doc_number"/>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid black; margin-bottom: 30px;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2; border-bottom: 1.5px solid black;">
+                                    <th style="border: 1.5px solid black; padding: 4px; width: 5%; text-align: center;">No</th>
+                                    <th style="border: 1.5px solid black; padding: 4px; width: 75%;">Keterangan</th>
+                                    <th style="border: 1.5px solid black; padding: 4px; width: 20%; text-align: right;">Rupiah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: center;">1</td>
+                                    <td style="border: 1.5px solid black; padding: 4px;">PT. Karunia Jasindo</td>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: right;"><t t-esc="doc.pajak_pib_jasindo" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: center;">2</td>
+                                    <td style="border: 1.5px solid black; padding: 4px;">Kas Besar</td>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: right;"><t t-esc="doc.pajak_pib_bu_fanny" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                                <tr style="font-weight: bold;">
+                                    <td colspan="2" style="border: 1.5px solid black; padding: 4px; text-align: left;">Total</td>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: right;"><t t-esc="doc.total_kasbon" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="text-center" style="font-weight: bold; font-size: 12px; margin-bottom: 10px;">
+                            Perincian Pengeluaran Biaya Impor <t t-esc="doc.vendor_id.name"/> Invoice <t t-esc="doc.custom_doc_number"/>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid black; margin-bottom: 20px;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2; border-bottom: 1.5px solid black;">
+                                    <th style="border: 1.5px solid black; padding: 4px; width: 5%; text-align: center;">No</th>
+                                    <th style="border: 1.5px solid black; padding: 4px; width: 75%;">Keterangan</th>
+                                    <th style="border: 1.5px solid black; padding: 4px; width: 20%; text-align: right;">Rupiah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: center;">1</td>
+                                    <td style="border: 1.5px solid black; padding: 4px;">Biaya Pajak</td>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: right;"><t t-esc="doc.biaya_pajak" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                                <t t-set="i" t-value="2"/>
+                                <t t-foreach="doc.import_line_ids" t-as="line">
+                                    <tr>
+                                        <td style="border: 1.5px solid black; padding: 4px; text-align: center;"><t t-esc="i"/></td>
+                                        <td style="border: 1.5px solid black; padding: 4px;"><t t-esc="line.product_id.name"/></td>
+                                        <td style="border: 1.5px solid black; padding: 4px; text-align: right;"><t t-esc="line.subtotal" t-options='{"widget": "float", "precision": 0}'/></td>
+                                    </tr>
+                                    <t t-set="i" t-value="i+1"/>
+                                </t>
+                                <tr style="font-weight: bold;">
+                                    <td colspan="2" style="border: 1.5px solid black; padding: 4px; text-align: left;">Total</td>
+                                    <td style="border: 1.5px solid black; padding: 4px; text-align: right;"><t t-esc="doc.total_pengeluaran" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="width: 50%; margin-left: auto;">
+                            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid black;">
+                                <tr>
+                                    <td style="padding: 4px; border: 1.5px solid black; font-weight: bold;">Total Kas Besar</td>
+                                    <td style="padding: 4px; border: 1.5px solid black; text-align: right;"><t t-esc="doc.total_kasbon" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 4px; border: 1.5px solid black; font-weight: bold;">Pengeluaran</td>
+                                    <td style="padding: 4px; border: 1.5px solid black; text-align: right;"><t t-esc="doc.total_pengeluaran" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                                <tr style="background-color: #f2f2f2;">
+                                    <td style="padding: 4px; border: 1.5px solid black; font-weight: bold;">Kekurangan</td>
+                                    <td style="padding: 4px; border: 1.5px solid black; text-align: right;"><t t-esc="doc.total_kekurangan" t-options='{"widget": "float", "precision": 0}'/></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="position: absolute; bottom: 0; width: 100%; text-align: center; font-size: 10px; border-top: 1px solid black; padding-top: 5px;">
+                            Phone: +62 21 663 0353 Web: http://karusindo.com <br/>
+                            NPWP: 0022394308415000
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report Action (Binding Model Dihapus agar tidak muncul di Print Menu) -->
+    <record id="action_report_import_perincian" model="ir.actions.report">
+        <field name="name">Perincian Biaya Impor</field>
+        <field name="model">custom.import</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">custom_import.report_import_perincian_document</field>
+        <field name="report_file">custom_import.report_import_perincian_document</field>
+        <!-- Hapus binding_model_id supaya tidak dobel -->
+    </record>
+</odoo>

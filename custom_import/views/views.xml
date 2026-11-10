@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        CATATAN:
+        File views.xml asli tidak ada di attachment.
+        Proteksi utama ada di Python: action_revisi() menolak status
+        Approved / Validate / Landed Cost / Posted / Cancelled.
+
+        Jika form CPR Anda masih menampilkan tombol Revisi setelah Approve,
+        sembunyikan tombol dengan attrs/states di form view, contoh:
+
+        <button name="action_revisi"
+                string="Revisi"
+                type="object"
+                attrs="{'invisible': [('state', 'in', ['approval', 'validate', 'landed_cost', 'post', 'cancel'])]}"/>
+
+        Tombol Cancel tetap ditampilkan untuk status tersebut.
+    -->
+</odoo>
