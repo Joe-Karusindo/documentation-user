@@ -1,0 +1,247 @@
+<odoo>
+    <data>
+        <record id="seq_custom_import" model="ir.sequence">
+            <field name="name">Custom Import Sequence</field>
+            <field name="code">custom.import</field>
+            <field name="implementation">no_gap</field>
+            <field name="prefix"></field> <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field name="number_next">1</field>
+        </record>
+
+        <record id="view_custom_import_form" model="ir.ui.view">
+            <field name="name">custom.import.form</field>
+            <field name="model">custom.import</field>
+            <field name="arch" type="xml">
+                <form string="Import">
+                    <header>
+                        <button name="action_confirm" 
+                                string="Confirm" 
+                                type="object" 
+                                states="draft" 
+                                class="oe_highlight"
+                                groups="custom_import.group_custom_import_confirm"/>
+
+                        <button name="action_approve" 
+                                string="Approve" 
+                                type="object" 
+                                states="confirm" 
+                                class="oe_highlight" 
+                                groups="custom_import.group_custom_import_approve"/>
+
+                        <button name="%(custom_import.action_report_import_perincian)d" 
+                                string="Print Perincian" 
+                                type="action" 
+                                class="oe_highlight" 
+                                attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                        <button name="action_revisi" string="Revisi" type="object" states="confirm" class="btn-secondary"/>
+                        <button name="action_cancel" string="Cancel" type="object" states="confirm,approval" class="btn-danger"/>
+                        
+                        <button name="action_create_vendor_bill" 
+                                string="Create Vendor Bill" 
+                                type="object" 
+                                class="oe_highlight" 
+                                attrs="{'invisible': [('state', '!=', 'approval')]}"/>
+                                
+                        <button name="action_validate" string="Validate" type="object" states="approval" class="oe_highlight"/>
+                        <button name="action_post" string="Post" type="object" states="validate" class="oe_highlight"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirm,approval,validate,post"/>
+                    </header>
+                    
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_vendor_bills" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('vendor_bill_count', '=', 0)]}">
+                                <field name="vendor_bill_count" widget="statinfo" string="Vendor Bills"/>
+                            </button>
+                            <button name="action_view_landed_costs" 
+                                    type="object" 
+                                    class="oe_stat_button" 
+                                    icon="fa-truck" 
+                                    attrs="{'invisible': ['|', ('landed_cost_count', '=', 0), '&amp;', ('state', '!=', 'validate'), ('state', '!=', 'post')]}">
+                                <field name="landed_cost_count" widget="statinfo" string="Landed Costs"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name"/></h1>
+                        </div>
+                        <group>
+                            <group colspan="2">
+                                <field name="ftm_id" 
+                                    options="{'no_create': True, 'no_open': False}" 
+                                    attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                    force_save="1"/>
+                            </group>
+                            
+                            <group string="Auto-filled Details">
+                                <field name="purchase_order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+                                <field name="vendor_id" readonly="1" force_save="1"/>
+                                <field name="picking_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+                                <field name="form_no" readonly="1" force_save="1"/>
+                            </group>
+                            
+                            <group string="Customs &amp; Values">
+                                <field name="custom_doc_number" readonly="1" force_save="1"/>
+                                <field name="date_confirm" readonly="1" force_save="1"/>
+                                <field name="no_awb" readonly="1" force_save="1"/>
+                                <field name="clearance_date" readonly="1" force_save="1"/>
+                                <field name="currency_id" readonly="1" force_save="1"/>
+                                <field name="currency_tax_rate" readonly="1" force_save="1"/>
+                                <field name="total_taxable_currency" decoration-bf="1" readonly="1" force_save="1"/>
+                                <field name="total_taxable_value" decoration-bf="1" readonly="1" force_save="1"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Additional Cost" name="additional_cost">
+                                <field name="import_line_ids">
+                                    <tree editable="bottom">
+                                        <field name="line_no" string="No" readonly="1"/>
+                                        <field name="product_id" 
+                                            options="{'no_create': True}" 
+                                            domain="[('landed_cost_ok', '=', True)]"
+                                            attrs="{'readonly': [('parent_state', 'not in', ['draft'])]}"/>
+                                        <field name="vendor_id" 
+                                            options="{'no_create': True}" 
+                                            domain="[('is_vendor', '=', True)]"
+                                            attrs="{'readonly': [('parent_state', 'not in', ['draft'])]}"/>
+                                        <field name="price_unit"/>
+                                        <field name="discount"/>
+                                        <field name="taxes_id" widget="many2many_tags" options="{'no_create': True}"/>
+                                        <field name="subtotal" readonly="1" force_save="1"/>
+                                        <field name="vendor_bill_ids" widget="many2many_tags" readonly="1"/>
+                                        <field name="parent_state" invisible="1"/>
+                                    </tree>
+                                </field>
+                                
+                                <group class="oe_subtotal_footer oe_right" colspan="2" name="import_total">
+                                    <field name="amount_untaxed" options="{'currency_field': 'currency_id'}"/>
+                                    <field name="amount_tax" options="{'currency_field': 'currency_id'}"/>
+                                    <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                        <label for="amount_total"/>
+                                    </div>
+                                    <field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" options="{'currency_field': 'currency_id'}"/>
+                                </group>
+                                <div class="oe_clear"/>
+                            </page>
+                            <page string="Operations" name="operations">
+                                <field name="operation_line_ids" readonly="1" force_save="1">
+                                    <tree>
+                                        <field name="line_no" string="No"/>
+                                        <field name="product_id"/>
+                                        <field name="purchase_order_id"/>
+                                        <field name="qty"/>
+                                        <field name="product_uom"/>
+                                        <field name="currency_id"/>
+                                        <field name="total_cost_currency"/>
+                                        <field name="extra_expense_currency"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Document Print Out" attrs="{'invisible': [('state', '=', 'draft')]}">
+                                <group>
+                                    <group string="Pencarian Kasbon Import">
+                                        <field name="kasbon_import" readonly="1"/>
+                                        <field name="pajak_pib_jasindo" readonly="1"/>
+                                        <field name="pajak_pib_bu_fanny" string="Kas Besar" readonly="1"/>
+                                        <field name="total_kasbon" string="Total Kas Besar" readonly="1"/>
+                                    </group>
+                                    <group string="Perincian Pengeluaran">
+                                        <field name="biaya_pajak" readonly="1"/>
+                                        <field name="total_perincian_pengeluaran" readonly="1"/>
+                                        <field name="total_pengeluaran" readonly="1" style="font-weight: bold;"/>
+                                        <field name="total_kekurangan" readonly="1" style="color: red;"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_custom_import_tree" model="ir.ui.view">
+            <field name="name">custom.import.tree</field>
+            <field name="model">custom.import</field>
+            <field name="arch" type="xml">
+                <tree string="Import">
+                    <field name="name" string="Internal Ref"/>
+                    <field name="ftm_id"/>
+                    <field name="date_confirm" optional="show"/>
+                    <field name="vendor_id"/>
+                    <field name="custom_doc_number"/>
+                    <field name="no_awb" optional="show"/>
+                    <field name="clearance_date" optional="show"/>
+                    
+                    <field name="purchase_order_ids" widget="many2many_tags" optional="show"/>
+                    <field name="picking_ids" string="Transfers" widget="many2many_tags" optional="show"/>
+                    
+                    <field name="product_ids" widget="many2many_tags" optional="hide"/>
+                    
+                    <field name="landed_cost_ids" widget="many2many_tags" string="Landed Cost" optional="show"/>
+                    
+                    <field name="total_taxable_value" sum="Total Taxable" decoration-bf="1"/>
+                    <field name="amount_total" sum="Total Amount" optional="show"/>
+                    
+                    <field name="state" widget="badge" 
+                        decoration-info="state == 'draft'" 
+                        decoration-warning="state == 'confirm'"
+                        decoration-success="state == 'approval'"
+                        decoration-primary="state == 'validate'"
+                        decoration-muted="state == 'post'"
+                        decoration-danger="state == 'cancel'"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_custom_import_search" model="ir.ui.view">
+            <field name="name">custom.import.search</field>
+            <field name="model">custom.import</field>
+            <field name="arch" type="xml">
+                <search string="Search Cost Payment Request">
+                    <field name="name" string="Internal Ref / CPR No"/>
+                    <field name="ftm_id" string="FTM Reference"/>
+                    <field name="vendor_id"/>
+                    <field name="custom_doc_number" string="Custom Doc Number"/>
+                    <field name="no_awb" string="No AWB"/>
+                    <field name="purchase_order_ids" string="Purchase Order"/>
+                    <field name="picking_ids" string="Transfer / Picking"/>
+                    <field name="import_line_ids" string="Product" filter_domain="[('import_line_ids.product_id', 'ilike', self)]"/>
+
+                    <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirm')]"/>
+                    <filter string="Approved" name="approved" domain="[('state', '=', 'approval')]"/>
+                    <filter string="Validated" name="validated" domain="[('state', '=', 'validate')]"/>
+                    <filter string="Posted" name="posted" domain="[('state', '=', 'post')]"/>
+                    <separator/>
+                    
+                    <filter string="Landed Cost" name="has_lc" domain="[('has_landed_cost', '=', True)]"/>
+                    
+                    <filter string="Clearance This Month" name="clearance_this_month" 
+                            domain="[('clearance_date', '&gt;=', context_today().strftime('%Y-%m-01')), ('clearance_date', '&lt;', (context_today() + datetime.timedelta(days=31)).strftime('%Y-%m-01'))]"/>
+
+                    <group expand="0" string="Group By">
+                        <filter string="Vendor" name="group_by_vendor" context="{'group_by': 'vendor_id'}"/>
+                        <filter string="FTM Reference" name="group_by_ftm" context="{'group_by': 'ftm_id'}"/>
+                        <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                        <filter string="Clearance Date" name="group_by_clearance" context="{'group_by': 'clearance_date:month'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_custom_import" model="ir.actions.act_window">
+            <field name="name">Cost Payment Request</field>
+            <field name="res_model">custom.import</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_custom_import_tree"/> 
+        </record>
+
+        <menuitem id="menu_import_main" name="Import" parent="viin_foreign_trade.menu_foreign_trade_root" sequence="98"/>
+        <menuitem id="menu_import_sequence" name="Cost Payment Request" parent="menu_import_main" action="action_custom_import" sequence="1"/>
+    </data>
+</odoo>

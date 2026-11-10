@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_custom_import_user,custom.import,model_custom_import,viin_foreign_trade.group_foreign_trade_user,1,1,1,1
+access_custom_import_line_user,custom.import.line,model_custom_import_line,viin_foreign_trade.group_foreign_trade_user,1,1,1,1
+access_custom_import_operation_user,custom.import.operation,model_custom_import_operation,viin_foreign_trade.group_foreign_trade_user,1,1,1,1
+access_import_vendor_bill_wizard_user,import.vendor.bill.wizard,model_import_vendor_bill_wizard,viin_foreign_trade.group_foreign_trade_user,1,1,1,1
+access_import_vendor_bill_wizard_line_user,import.vendor.bill.wizard.line,model_import_vendor_bill_wizard_line,viin_foreign_trade.group_foreign_trade_user,1,1,1,1
+access_import_confirm_wizard_user,import.confirm.wizard,model_import_confirm_wizard,viin_foreign_trade.group_foreign_trade_user,1,1,1,1
+access_custom_import_confirm,custom.import.confirm,model_custom_import,custom_import.group_custom_import_confirm,1,1,1,1
+access_custom_import_approve,custom.import.approve,model_custom_import,custom_import.group_custom_import_approve,1,1,1,1

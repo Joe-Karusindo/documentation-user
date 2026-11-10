@@ -1,0 +1,25 @@
+<odoo>
+    <data>
+        <record id="view_custom_declaration_import_form_inherit_cpr" model="ir.ui.view">
+            <field name="name">custom.declaration.import.form.inherit.cpr</field>
+            <field name="model">custom.declaration.import</field>
+            <field name="inherit_id" ref="viin_foreign_trade.custom_declaration_import_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='stock_picking_ids']" position="after">
+                    <field name="cpr_id" readonly="1" options="{'no_open': False, 'no_create': True}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_custom_declaration_import_tree_inherit_cpr" model="ir.ui.view">
+            <field name="name">custom.declaration.import.tree.inherit.cpr</field>
+            <field name="model">custom.declaration.import</field>
+            <field name="inherit_id" ref="viin_foreign_trade.custom_declaration_import_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='stock_picking_ids']" position="after">
+                    <field name="cpr_id" readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

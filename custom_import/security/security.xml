@@ -1,0 +1,21 @@
+<odoo>
+    <data noupdate="1">
+        <record id="module_category_custom_import" model="ir.module.category">
+            <field name="name">Custom Import Access</field>
+            <field name="description">Manajemen akses untuk modul Custom Import</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="group_custom_import_confirm" model="res.groups">
+            <field name="name">Import Confirm Access</field>
+            <field name="category_id" ref="module_category_custom_import"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="group_custom_import_approve" model="res.groups">
+            <field name="name">Import Approve Access</field>
+            <field name="category_id" ref="module_category_custom_import"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+    </data>
+</odoo>
